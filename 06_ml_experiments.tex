@@ -1,0 +1,406 @@
+\documentclass[mathserif, xcolor=table, svgnames]{beamer}
+\mode<presentation>
+{
+  \usetheme{Hannover}
+  \setbeamercovered{transparent}
+}
+\usepackage[english]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsthm}
+\usepackage{array,xspace}
+\usepackage{booktabs}
+\usepackage{dcolumn}
+\usepackage{eulervm}
+\usepackage{eurosym}
+\usepackage{graphicx}
+\input{isomath.tex}
+\usepackage{booktabs, multicol, multirow}
+\usepackage{listings}
+\usepackage{mathtools}
+\usepackage{pdfpages}
+\usepackage{relsize}
+\usepackage{wasysym}
+
+\colorlet{OurColor}{LawnGreen!40}
+\colorlet{ShadedRowColor}{LightSkyBlue!40}
+
+\newcommand{\eur}{\EUR{}}
+\newcommand{\individuals}{\mathbbm{I}}
+\newtheorem{proposition}{Proposition}
+\newcommand{\std}[1]{\small\color{lightgray}{#1}}
+\long\def\GobbleColumnStart#1\GobbleColumnStop{}
+\let\GobbleColumnStop\relax
+\newcolumntype{i}{>{\GobbleColumnStart}c<{\GobbleColumnStop}}
+\newcommand{\V}{\ensuremath{\surd}}
+\newcommand{\YSM}{\ensuremath{\text{YSM}}\xspace}
+\graphicspath{{./}{cartoons/}{images/}}
+
+\title{Machine Learning Experiment Design}
+\author{Ott Toomet}
+
+\begin{document}
+\lstset{language=Python}
+
+\begin{frame}
+  \maketitle
+\end{frame}
+
+\begin{frame}
+  \tableofcontents
+\end{frame}
+
+\begin{frame}
+\frametitle{Where We Stand}
+\begin{columns}
+  \begin{column}{0.5\linewidth}
+    \begin{itemize}
+    \item Introduction
+    \item Methods
+      \begin{itemize}
+      \item python, pandas
+      \item Linear algebra
+      \item Probability and statistics
+      \end{itemize}
+    \item Guest speaker
+    \item Linear regression
+      \begin{itemize}
+      \item Causality
+      \end{itemize}
+    \item ML
+      \begin{itemize}
+      \item \alert{ML Experiment design}
+      \item Nearest neighbors
+      \end{itemize}
+    \end{itemize}
+  \end{column}
+  \begin{column}{0.5\linewidth}
+    \begin{itemize}
+    \item Methods
+      \begin{itemize}
+      \item Gradient Descent 
+      \item Maximum Likelihood, logit
+      \item regularization
+      \end{itemize}
+    \item ML
+      \begin{itemize}
+      \item Naive bayes
+      \item PCA/dimensionality reduction
+      \item Clusters \& recommenders
+      \item Trees and forests
+      \item Neural networks
+      \end{itemize}
+    \item Wrap-up
+    \end{itemize}
+  \end{column}
+\end{columns}
+\end{frame}
+
+\section{Review}
+\frame{\tableofcontents[currentsection]}
+
+\begin{frame}
+  \frametitle{Causality}
+  \begin{itemize}
+  \item Causal/non-causal inference
+  \item Counterfactual
+  \item formalism: $Y(1|T = 0)$
+  \item Estimators:
+    \begin{itemize}
+    \item Cross-section
+    \item Before-after
+    \item Diff-in-Diff (Double Difference)
+    \item Fixed effects
+      \pause
+    \item Instrumental Variables
+    \item Regression Discontinuity
+    \end{itemize}
+  \item 3 stories of causality
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Cross-Section Estimator}
+  \begin{center}
+    \begin{tabular}{lrr}
+      \toprule
+      & US & SE\\
+      \midrule
+      Healthcare expenditures (\% of GDP) & 16.4 & 11.0 \\
+      Life expectancy (years) & 78.8 & 82.0 \\
+      \bottomrule
+    \end{tabular}
+  \end{center}
+  What is the impact of healthcare expenditures on life expectancy?
+\end{frame}
+
+\begin{frame}
+  \frametitle{Before-After Estimator}
+  \begin{center}
+    \begin{tabular}{lrr}
+      \toprule
+      & Before & After \\
+      \midrule
+      input  & 22 & 25 \\
+      output & 49 & 51 \\
+      \bottomrule
+    \end{tabular}
+  \end{center}
+  What is the impact of input on output?
+\end{frame}
+
+\begin{frame}
+  \frametitle{Differences-in-Differences}
+  \begin{center}
+    \begin{tabular}{lrrrr}
+      \toprule
+      & T Before & T After & C Before & C After \\
+      \midrule
+      output & 49 & 51 & 52 & 60\\
+      \bottomrule
+    \end{tabular}
+  \end{center}
+  What is the impact of treatment on output?  
+\end{frame}
+
+\section[Intro]{Machine Learning Introduction}
+\frame{\tableofcontents[currentsection]}
+
+{
+\setbeamercolor{background canvas}{bg=}
+\includepdf[pages=8]{06_ml_experiments_josh.pdf}
+}
+
+\section[Supervised]{Supervised-Unsupervised Learning}
+\frame{\tableofcontents[currentsection]}
+
+{
+\setbeamercolor{background canvas}{bg=}
+\includepdf[pages=10-11]{06_ml_experiments_josh.pdf}
+}
+
+\section['metrics vs ML]{Econometrics vs Machine Learning}
+\frame{\tableofcontents[currentsection]}
+
+{
+\setbeamercolor{background canvas}{bg=}
+\includepdf[pages=13]{06_ml_experiments_josh.pdf}
+}
+
+\begin{frame}
+  \frametitle{Two Paradigms: Example}
+  \begin{columns}
+    \begin{column}{0.6\linewidth}
+      \begin{itemize}
+      \item Inference
+        \begin{itemize}
+        \item Which features determine income?
+        \item Do married people earn more?
+        \item What is the effect of graduating a school?
+        \end{itemize}
+      \item Prediction (classification)
+        \begin{itemize}
+        \item What is the income of person $i$?
+        \item What will be the public debt if we cut taxes?
+        \item Which number does the handwriting represent?
+        \item Will it rain tomorrow?
+        \end{itemize}
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.4\linewidth}
+      \includegraphics[width=\linewidth]{optimistic_about_economy.jpg}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+{
+\setbeamercolor{background canvas}{bg=}
+\includepdf[pages=16-17]{06_ml_experiments_josh.pdf}
+}
+
+\section[Model]{Model Specification}
+\frame{\tableofcontents[currentsection]}
+
+\begin{frame}
+  \frametitle{Model and Reality}
+  \begin{columns}[T]
+    \begin{column}{0.5\linewidth}
+      \begin{center}
+        Model\\
+        \includegraphics[width=0.7\linewidth]{How_to_find_Engine_service_design.jpg}
+      \end{center}
+    \end{column}
+    \begin{column}{0.5\linewidth}
+      \begin{center}
+        Reality
+        \includegraphics[width=\linewidth]{How_to_find_Engine_service_design_satellite.jpg}
+      \end{center}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+{
+\setbeamercolor{background canvas}{bg=}
+\includepdf[pages=18-19]{06_ml_experiments_josh.pdf}
+}
+
+\section{Goodness of Fit}
+\frame{\tableofcontents[currentsection]}
+
+{
+\setbeamercolor{background canvas}{bg=}
+\includepdf[pages=13]{04_linear_regression_old.pdf}
+}
+
+\begin{frame}
+  \frametitle{Deviations $\vec{y} - \bar{\vec{y}}$}
+  Let $n\times 1$ vector
+  \begin{equation*}
+    \vec{i} = [1,1,\dots,1]'
+  \end{equation*}
+  Now
+  \begin{equation*}
+    \vec{y} - \bar{\vec{y}} = 
+    \vec{y} - \vec{i} \bar{\vec{y}} = 
+    \left[ \mat{I} - \frac{1}{n}\vec{i}\vec{i}' \right]
+    \vec{y}
+    \equiv
+    \mat{M}_{0} \vec{y}
+  \end{equation*}
+  $\mat{M}_{0}$ is \emph{idempotent}:
+  \begin{equation*}
+    \mat{M}_{0}' \mat{M}_{0} = \mat{M}_{0}
+  \end{equation*}
+  It looks like:
+  \begin{equation*}
+    \begin{pmatrix}
+      1 - \frac{1}{n} & -\frac{1}{n} & \dots &  -\frac{1}{n}\\
+       -\frac{1}{n}   & 1 - \frac{1}{n} & \dots & -\frac{1}{n}\\
+       \vdots         & \vdots          & \ddots & \vdots\\
+        -\frac{1}{n}  &  -\frac{1}{n} & \hdots &  1 - \frac{1}{n}\\
+    \end{pmatrix}
+  \end{equation*}
+\end{frame}
+
+\begin{frame}
+  \frametitle{$\mat{M}_0$}
+  (You can show it is idempotent:)
+  \begin{multline*}
+    \mat{M}_{0,11} = (1 - \frac{1}{n})^{2}+ (n+1)\frac{1}{n} =\\
+    = 1 - \frac{2}{n} + \frac{1}{n^{2}} + \frac{n-1}{n^{2}} = 1 -\frac{1}{n}
+  \end{multline*}
+  Now total sum of squares:
+  \begin{equation*}
+    SST = (\vec{y} - \hat{\vec{y}})' (\vec{y} - \hat{\vec{y}})
+    =
+    \vec{y} \mat{M}_{0} \vec{y}
+  \end{equation*}
+\end{frame}
+
+{
+\setbeamercolor{background canvas}{bg=}
+\includepdf[pages=15-16]{04_linear_regression_old.pdf}
+}
+
+{
+\setbeamercolor{background canvas}{bg=}
+\includepdf[pages=39-40]{06_ml_experiments_josh.pdf}
+}
+
+{
+\setbeamercolor{background canvas}{bg=}
+\includepdf[pages=21-24]{06_ml_experiments_josh.pdf}
+}
+
+\section{Evaluating Classifiers}
+\frame{\tableofcontents[currentsection]}
+
+\begin{frame}
+  \frametitle{Precision and Recall}
+  \begin{itemize}
+  \item Binary classifier:
+    \begin{itemize}
+    \item classify \textbf{Positive} or \textbf{Negative}
+    \item $T$ positives in the data (Truth)
+    \end{itemize}
+  \item You get $S$ positive classifications (System)
+  \item $I$ = Correct Positives (Intersection)
+  \item Precision: percentage of positives predictions correct
+    \begin{equation*}
+      P = \frac{I}{S}
+    \end{equation*}
+  \item Recall: percentage of positives found correctly
+    \begin{equation*}
+      R = \frac{I}{T}
+    \end{equation*}
+  \item Accuracy: percentage of predictions correct (both positive and negative)
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Evaluate:}
+  \begin{columns}
+    \begin{column}{0.5\linewidth}
+      \begin{center}
+        \rotatebox{90}{Prediction}
+        \begin{tabular}[b]{|l|cc|}
+          & \multicolumn{2}{c}{Truth}\\
+          \midrule
+          & + & -\\
+          \midrule
+          + & 25 & 25\\
+          - & 25 & 25\\
+          \bottomrule
+        \end{tabular}
+      \end{center}
+      \begin{itemize}
+      \item $P =$?
+      \item $R =$?
+      \item $A =$?
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.5\linewidth}
+      \begin{center}
+        \rotatebox{90}{Prediction}
+        \begin{tabular}[b]{|l|cc|}
+          & \multicolumn{2}{c}{Truth}\\
+          \midrule
+          & + & -\\
+          \midrule
+          + &  0 &  0\\
+          - & 10 & 90\\
+          \bottomrule
+        \end{tabular}
+      \end{center}
+      \begin{itemize}
+      \item $P =$?
+      \item $R =$?
+      \item $A =$?
+      \end{itemize}
+      Swap +/- and repeat
+    \end{column}
+  \end{columns}
+\end{frame}
+
+{
+\setbeamercolor{background canvas}{bg=}
+\includepdf[pages=34-37]{06_ml_experiments_josh.pdf}
+}
+
+\section{Training \& Testing}
+\frame{\tableofcontents[currentsection]}
+
+{
+\setbeamercolor{background canvas}{bg=}
+\includepdf[pages=26-27]{06_ml_experiments_josh.pdf}
+}
+
+\section{Cross-Validation}
+\frame{\tableofcontents[currentsection]}
+
+{
+\setbeamercolor{background canvas}{bg=}
+\includepdf[pages=28-32]{06_ml_experiments_josh.pdf}
+}
+  
+\end{document}

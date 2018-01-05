@@ -1,0 +1,372 @@
+\documentclass[mathserif]{beamer}
+\mode<presentation>
+{
+  \usetheme{Hannover}
+  \setbeamercovered{transparent}
+}
+\usepackage[english]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{array,xspace}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\input{isomath.tex}
+\usepackage{eulervm}
+\usepackage{multicol}
+\usepackage{Sweave}
+\usepackage{textcomp}
+\usepackage{verbatim}
+\usepackage{wasysym}
+
+\newcommand{\std}[1]{\small\color{lightgray}{#1}}
+\long\def\GobbleColumnStart#1\GobbleColumnStop{}
+\let\GobbleColumnStop\relax
+\newcolumntype{i}{>{\GobbleColumnStart}c<{\GobbleColumnStop}}
+\graphicspath{{./}{cartoons/}{images/}}
+
+
+\title{Neural Networks}
+\author{Ott Toomet}
+
+\begin{document}
+
+\begin{frame}
+  \maketitle
+\end{frame}
+
+\begin{frame}
+  \tableofcontents
+\end{frame}
+
+\begin{frame}
+\frametitle{The Big Picture}
+\begin{columns}
+  \begin{column}{0.5\linewidth}
+    \begin{itemize}
+    \item Introduction
+    \item Methods
+      \begin{itemize}
+      \item python, pandas
+      \item Linear algebra
+      \item Probability and statistics
+      \end{itemize}
+    \item Guest speaker
+    \item Linear regression
+      \begin{itemize}
+      \item Causality
+      \end{itemize}
+    \item ML
+      \begin{itemize}
+      \item ML Experiment design
+      \item Nearest neighbors
+      \end{itemize}
+    \end{itemize}
+  \end{column}
+  \begin{column}{0.5\linewidth}
+    \begin{itemize}
+    \item Methods
+      \begin{itemize}
+      \item Gradient Descent 
+      \item Maximum Likelihood, logit
+      \item regularization
+      \end{itemize}
+    \item ML
+      \begin{itemize}
+      \item Naive bayes
+      \item PCA/dimensionality reduction
+      \item Clusters \& recommenders
+      \item Trees and forests
+      \item \alert{Neural networks}
+      \end{itemize}
+    \item Wrap-up
+    \end{itemize}
+  \end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Trees and Forests}
+  \begin{itemize}
+  \item Decision tree
+    \begin{itemize}
+    \item Decision boundaries
+    \item Continuous features
+    \end{itemize}
+  \item Choosing the feature to split on
+  \item Entropy
+  \item Information gain
+  \item Regression Trees
+  \item Random Forests
+  \end{itemize}
+\end{frame}
+
+\section{Introduction}
+\frame{\tableofcontents[currentsubsection]}
+
+\begin{frame}
+  \frametitle{History}
+  \begin{itemize}
+  \item Cybernetics (1940s--1960s)
+  \item Connectionism (1980s--1990s)
+  \item Deep learning (2006--)
+  \item Increasing dataset sizes
+  \item Increasing model complexity
+  \end{itemize}
+  Ideas from brain science:
+  \begin{itemize}
+  \item Neural Networks (statistical models)
+  \item Computational neuroscience (how brain works)
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Brain \& Computer}
+  \begin{itemize}
+  \item 100G neurons
+  \item 10k-100k connections per neuron
+  \item Switching time 1ms
+  \item image recognition $\sim 0.1$ s
+    \begin{itemize}
+    \item[$\Rightarrow$] must work in parallel
+    \end{itemize}
+  \item Computer: 100G transistors
+  \item 10-100 connections per transistor
+  \item switching time 0.1 ns
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Neurons}
+  \begin{center}
+    \includegraphics[width=\linewidth]{neurons.jpg}
+  \end{center}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Neurons:}
+  \begin{itemize}
+  \item processes and transmits electric information
+    \begin{itemize}
+    \item connected to other neurons via synapses
+    \item In this way form networks
+    \end{itemize}
+  \item Contains cell body, axon, dendrites
+    \begin{itemize}
+    \item signal flows from axon of one neuron to dendrites of another
+      neuron. 
+    \end{itemize}
+  \item If electrically excited enough, outputs a pulse to axon
+    \begin{itemize}
+    \item activates the synaptic connection of another neuron
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\section{Perceptron}
+
+\begin{frame}
+  \frametitle{Perceptron}
+  \includegraphics[width=\linewidth]{perceptron.png}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Simple Perceptron}
+  \begin{itemize}
+  \item Two layers:
+    \begin{itemize}
+    \item Two inputs ($x_{1}$, $x_{2}$)
+    \item One processing (output) layer $y$
+    \end{itemize}
+  \item Processing layer computes:
+    \begin{equation*}
+      y = f(w_{1} \cdot x_{1} + w_{2} \cdot x_{2})
+    \end{equation*}
+    in simple case a step function
+    \begin{equation*}
+      y = \indic(w_{1} \cdot x_{1} + w_{2} \cdot x_{2} > T)
+    \end{equation*}
+    ($T$: threshold) 
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{DIY: AND Perceptron}
+  \begin{center}
+    \begin{tabular}{lll}
+      \toprule
+      $x_{1}$ & $x_{2}$ & y \\
+      \midrule
+      0 & 0 & 0 \\
+      0 & 1 & 0 \\
+      1 & 0 & 0 \\
+      1 & 1 & 1 \\
+      \bottomrule
+    \end{tabular}
+  \end{center}
+  find $w_{1}$, $w_{2}$, $T$!
+\end{frame}
+
+\begin{frame}
+  \frametitle{DIY: OR Perceptron}
+  \begin{center}
+    \begin{tabular}{lll}
+      \toprule
+      $x_{1}$ & $x_{2}$ & y \\
+      \midrule
+      0 & 0 & 0 \\
+      0 & 1 & 1 \\
+      1 & 0 & 1 \\
+      1 & 1 & 1 \\
+      \bottomrule
+    \end{tabular}
+  \end{center}
+  find $w_{1}$, $w_{2}$, $T$!
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Can You Do XOR Perceptron?}
+  \begin{center}
+    \begin{tabular}{lll}
+      \toprule
+      $x_{1}$ & $x_{2}$ & y \\
+      \midrule
+      0 & 0 & 0 \\
+      0 & 1 & 1 \\
+      1 & 0 & 1 \\
+      1 & 1 & 0 \\
+      \bottomrule
+    \end{tabular}
+  \end{center}
+\end{frame}
+
+\begin{frame}
+  \frametitle{AND-OR-XOR}
+  \begin{itemize}
+  \item 2-layer simple XOR perceptron not possible:
+  \item XOR is not a linear function
+  \end{itemize}
+  \begin{center}
+    \includegraphics[width=\linewidth]{and-or-xor_perceptrons.png}
+  \end{center}
+\end{frame}
+
+\section{Neural Networks}
+
+\begin{frame}
+  \frametitle{Hidden-Layer Perceptron}
+  But hidden layer perceptrons can...
+  \begin{center}
+    \includegraphics[width=0.3\linewidth]{perceptronXOR.jpg}
+  \end{center}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Neural Network}
+  Neural network with 1 hidden layer
+  \begin{center}
+    \includegraphics[width=0.7\linewidth]{neural_net.jpeg}
+  \end{center}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Components}
+  \begin{enumerate}
+  \item Input layer $\vec{x}$ (here $P = 3$ components)
+  \item Hidden layer $\vec{Z}$ (here $M = 4$ components):
+    \begin{itemize}
+    \item node $m$ processes weighted sum of $\vec{x}$:
+      \begin{equation*}
+        Z_{m} = \sigma(\alpha_{0m} + \vec{\alpha}_{m}^{T} \vec{x})
+      \end{equation*}
+    \item $\sigma(\cdot)$ step, sigmoid, ... function
+    \item $\alpha_{0m}$ intercept (bias)
+    \end{itemize}
+  \item Output layer (here $K = 2$ components)
+    \begin{itemize}
+    \item Processes hidden layer information:
+      \begin{equation*}
+        y_{k} = g_{k}(\beta_{0k} + \vec{\beta}_{k}^{T} \vec{Z}) 
+        \equiv f_{k}(\vec{X})
+      \end{equation*}
+    \end{itemize}
+  \end{enumerate}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Parameters:}
+  \begin{itemize}
+  \item $\vec{\alpha}$ ($(P + 1) \cdot M$ components)
+  \item $\vec{\beta}$ ($(M + 1) \cdot K$ components)
+  \item ... other hidden layers
+  \item $M$
+  \item $\sigma(\cdot)$, $g(\cdot)$ related parameters
+  \item[$\Rightarrow$] overfitting is an issue!
+  \item Regularization $\lambda$
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Optimization}
+  \begin{itemize}
+  \item Objective function:
+    \begin{itemize}
+    \item For regression SSE:
+      \begin{equation*}
+        L(\theta) =
+        \sum_{i=1}^{N} \sum_{k=1}^{K} [ y_{i} - f_{k} (\vec{x}_{i}) ]^{2}
+      \end{equation*}
+    \item For classification entropy:
+      \begin{equation*}
+        L(\theta) =
+        - \sum_{i=1}^{N} \sum_{k=1}^{K} y_{i} \log f_{k} (\vec{x}_{i})
+      \end{equation*}
+    \end{itemize}
+  \item Use a form of gradient descent
+  \item Not convex!
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Example: Handwritten Numbers}
+  \begin{enumerate}
+  \item No hidden layer (multinomial logit)
+  \item 12-unit fully connected hidden layer
+  \item two hidden layers, locally connected
+  \item two hidden layers, locally connected, shared weights
+    \begin{itemize}
+    \item \emph{same} operation on different parts of the image
+    \end{itemize}
+  \item two hidden layers, locally connected, two-level shared weights
+  \end{enumerate}
+  All networks have sigmoidal output
+\end{frame}
+
+\begin{frame}
+  \frametitle{Example: Network Schematics}
+  \includegraphics[width=0.6\linewidth]{5_ZIP_networks.png}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Example: Performance}
+  \includegraphics[width=\linewidth]{5_ZIP_networks_performance.png}
+\end{frame}
+
+
+\section{Key Concepts}
+
+\begin{frame}
+  \frametitle{Neural Networks}
+  \begin{itemize}
+  \item Neural Network
+  \item Nodes (neurons)
+    \begin{itemize}
+    \item How nodes process inputs
+    \end{itemize}
+  \item Layers
+  \item Hidden layers
+  \end{itemize}
+\end{frame}
+
+
+\end{document}

@@ -1,0 +1,306 @@
+\documentclass[mathserif, xcolor=table, svgnames]{beamer}
+\mode<presentation>
+{
+  \usetheme{Hannover}
+  \setbeamercovered{transparent}
+}
+\usepackage[english]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsthm}
+\usepackage{array,xspace}
+\usepackage{dcolumn}
+\usepackage{eulervm}
+\usepackage{eurosym}
+\usepackage{graphicx}
+\input{isomath.tex}
+\usepackage{booktabs, multicol, multirow}
+\usepackage{listings}
+\usepackage{mathtools}
+\usepackage{pdfpages}
+\usepackage{relsize}
+\usepackage{wasysym}
+
+\colorlet{OurColor}{LawnGreen!40}
+\colorlet{ShadedRowColor}{LightSkyBlue!40}
+
+\newcommand{\eur}{\EUR{}}
+\newcommand{\individuals}{\mathbbm{I}}
+\newtheorem{proposition}{Proposition}
+\newcommand{\std}[1]{\small\color{lightgray}{#1}}
+\long\def\GobbleColumnStart#1\GobbleColumnStop{}
+\let\GobbleColumnStop\relax
+\newcolumntype{i}{>{\GobbleColumnStart}c<{\GobbleColumnStop}}
+\newcommand{\V}{\ensuremath{\surd}}
+\newcommand{\YSM}{\ensuremath{\text{YSM}}\xspace}
+\graphicspath{{./}{cartoons/}{images/}}
+
+\title{Linear Regression}
+\author{Ott Toomet}
+
+\begin{document}
+\lstset{language=Python}
+
+\begin{frame}
+  \maketitle
+\end{frame}
+
+\begin{frame}
+  \tableofcontents
+\end{frame}
+
+\section{Advertisement}
+
+\begin{frame}
+  \frametitle{Advertisement}
+  \begin{center}
+    \includegraphics[width=0.75\linewidth]{data_science_seminar_2017-04-26.pdf}
+  \end{center}
+\end{frame}
+
+\begin{frame}
+\frametitle{Where We Stand}
+\begin{columns}
+  \begin{column}{0.5\linewidth}
+    \begin{itemize}
+    \item Introduction
+    \item Methods
+      \begin{itemize}
+      \item python, pandas
+      \item Linear algebra
+      \item Probability and statistics
+      \end{itemize}
+    \item Guest speaker
+    \item \alert{Linear regression}
+      \begin{itemize}
+      \item Causality
+      \end{itemize}
+    \item ML
+      \begin{itemize}
+      \item Experiment design
+      \item Nearest neighbors
+      \end{itemize}
+    \end{itemize}
+  \end{column}
+  \begin{column}{0.5\linewidth}
+    \begin{itemize}
+    \item Methods
+      \begin{itemize}
+      \item Gradient Descent 
+      \item Maximum Likelihood, logit
+      \item regularization
+      \end{itemize}
+    \item ML
+      \begin{itemize}
+      \item Naive bayes
+      \item PCA/dimensionality reduction
+      \item Clusters \& recommenders
+      \item Trees and forests
+      \item Neural networks
+      \end{itemize}
+    \item Wrap-up
+    \end{itemize}
+  \end{column}
+\end{columns}
+\end{frame}
+
+\section{Probability \& Statistics}
+
+\begin{frame}
+  \frametitle{Key Concepts}
+  \begin{itemize}
+  \item Sample Space
+  \item Event
+  \item Probability
+  \item Random Variable
+  \item Distributions:
+    \begin{itemize}
+    \item Bernoulli
+    \item Binomial
+    \item Uniform
+    \item Normal (Gaussian)
+    \end{itemize}
+  \item Expectation
+  \item Variance
+  \item (In)dependence
+  \item Conditional Probability
+  \item Bayes' theorem
+  \end{itemize}
+\end{frame}
+
+
+\section[Problem]{The Problem}
+
+\begin{frame}
+  \frametitle{Data Look Like This:}
+  Variables are often clearly related:
+  \begin{center}
+    \includegraphics[width=0.7\linewidth]{related_dots.pdf}
+  \end{center}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Want a Linear Relationship:}
+  \begin{center}
+    \includegraphics[width=0.7\linewidth]{related_dots_line.pdf}
+  \end{center}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{What Is the Best Way to Do It?}
+  \begin{itemize}
+  \item What is the correct slope, intercept?
+    \begin{itemize}
+    \item There are many ways to get these.
+    \item Is any of these better?
+    \item Under which circumstances?
+    \end{itemize}
+  \item What about statistical inference?
+    \begin{itemize}
+    \item Can we say that one slope is larger than another?
+    \end{itemize}
+  \item What are the pitfalls?
+    \begin{itemize}
+    \item What kind of regularity assumptions do we need?
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\section[Solution]{The Solution}
+
+\begin{frame}
+  \frametitle{(Linear) Least Squares}
+  \begin{itemize}
+  \item $\overbracket{\text{Minimize}}^{\text{\alert{\emph{least}}}}$
+    the sum of 
+    $\overbracket{\text{squared}}^{\text{\alert{\emph{squares}}}}$
+    deviations
+    \begin{equation*}
+      \min_{\vec{\beta}}
+      \sum_{i}^{n} [ y_{i} - \hat y_{i} (\vec{\beta})]^{2}
+    \end{equation*}
+  \item where the model is $\overbracket{\text{linear}}^{\text{\alert{\emph{linear}}}}$:
+    \begin{equation*}
+      \hat y_{i}(\vec{\beta}) = \vec{x}_{i}' \cdot \vec{\beta}
+    \end{equation*}
+  \item Term ``regression'' refer to \emph{regression toward the mean}
+    (F. Galton)
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{The Model}
+  \begin{itemize}
+  \item For individual observation $i$ we assume:
+    \begin{equation*}
+      y_{i} = \vec{x}_{i}' \cdot \vec{\beta} + \epsilon_{i}
+    \end{equation*}
+    \begin{description}
+    \item[$y$] observation (numeric label)
+    \item[$x$] numerical features (possibly engineered)
+    \item[$\vec{\beta}$] unknown parameters
+    \item[$\epsilon$] random disturbance term (error term, noise term \dots)
+    \end{description}
+  \item The most widely used statistical model?
+    \begin{itemize}
+    \item Econometrics: find ``best'' $\vec{\beta}$
+    \item Machine Learning: get best predictions
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Solving the Model}
+  Solving means to find the best $\vec{\beta}$
+  \begin{itemize}
+  \item Stack all the observations on top of each other:
+    \begin{equation*}
+      \begin{bmatrix}
+        y_{1} \\ y_{2} \\ \vdots \\ y_{n}
+      \end{bmatrix}
+      =
+      \begin{bmatrix}
+        x_{11} & x_{12} & \hdots & x_{1k} \\
+        x_{21} & x_{22} & \hdots & x_{2k} \\
+        \vdots&\vdots & \ddots & \vdots\\
+        x_{n1} & x_{n2} & \hdots & x_{nk} \\
+      \end{bmatrix}
+      \begin{bmatrix}
+        \beta_{1} \\ \beta_{2} \\ \vdots \\ \beta_{k}\\
+      \end{bmatrix}
+      +
+      \begin{bmatrix}
+        \epsilon_{1}\\ \epsilon_{2} \\ \vdots \\ \epsilon_{n}\\
+      \end{bmatrix}
+    \end{equation*}
+    In matrix form
+    \begin{equation*}
+      \vec{y} = \mat{X}\vec{\beta} + \vec{\epsilon}
+    \end{equation*}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Standard Assumptions}
+  \begin{itemize}
+  \item Regularity assumptions:
+    \begin{enumerate}
+    \item Linearity: 
+      \begin{itemize}
+      \item relationship b/w $y$ and $\vec{X}$ is linear
+      \end{itemize}
+    \item Full rank
+      \begin{itemize}
+      \item $\mat{X}$ is full rank
+      \end{itemize}
+    \item Independent variables are exogeneous:
+      \begin{equation*}
+        \E \epsilon|x = 0
+      \end{equation*}
+      \pause
+    \item Homoscedasticity, no autocorrelation:
+      \begin{equation*}
+        \epsilon \sim i.i.d \ D
+      \end{equation*}
+    \item Exogeneous data:
+      \begin{equation*}
+        \vec{x} \independent \epsilon
+      \end{equation*}
+    \end{enumerate}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Solution}
+  \begin{enumerate}
+  \item Compute predicted $\hat{\vec{y}}(\vec{b}) = \mat{X} \cdot
+    \vec{b}$
+  \item Compute \emph{residuals}
+    \begin{equation*}
+      \vec{e}(\vec{b}) = 
+      \vec{y} - \hat{\vec{y}} =
+      \vec{y} - \mat{X} \cdot \vec{b}
+    \end{equation*}
+  \item Compute sum of squared residuals:
+    \begin{align*}
+      SS(\vec{b}) &= \vec{e}'(\vec{b}) \cdot \vec{e}(\vec{b}) \\
+      &= 
+        \left( \vec{y} - \mat{X} \cdot \vec{b} \right)' \cdot
+        \left( \vec{y} - \mat{X} \cdot \vec{b} \right) \\
+      &= \vec{y}'\vec{y} - 
+        2 \vec{b}' \mat{X}' \vec{y} +
+        \vec{b}' \mat{X}' \mat{X} \vec{b}
+    \end{align*}
+    \begin{itemize}
+    \item Note: $\vec{b}' \mat{X}' \vec{y} = \vec{y}' \mat{X} \vec{b}$ as it is a scalar
+    \end{itemize}
+  \end{enumerate}
+\end{frame}
+
+{
+\setbeamercolor{background canvas}{bg=}
+\includepdf[pages=9-23]{04_linear_regression_old.pdf}
+}
+
+\end{document}

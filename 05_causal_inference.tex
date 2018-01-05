@@ -1,0 +1,397 @@
+\documentclass[mathserif, xcolor=table, svgnames]{beamer}
+\mode<presentation>
+{
+  \usetheme{Hannover}
+  \setbeamercovered{transparent}
+}
+\usepackage[english]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsthm}
+\usepackage{array,xspace}
+\usepackage{booktabs}
+\usepackage{dcolumn}
+\usepackage{eulervm}
+\usepackage{eurosym}
+\usepackage{graphicx}
+\input{isomath.tex}
+\usepackage{booktabs, multicol, multirow}
+\usepackage{listings}
+\usepackage{mathtools}
+\usepackage{pdfpages}
+\usepackage{relsize}
+\usepackage{wasysym}
+
+\colorlet{OurColor}{LawnGreen!40}
+\colorlet{ShadedRowColor}{LightSkyBlue!40}
+
+\newcommand{\eur}{\EUR{}}
+\newcommand{\individuals}{\mathbbm{I}}
+\newtheorem{proposition}{Proposition}
+\newcommand{\std}[1]{\small\color{lightgray}{#1}}
+\long\def\GobbleColumnStart#1\GobbleColumnStop{}
+\let\GobbleColumnStop\relax
+\newcolumntype{i}{>{\GobbleColumnStart}c<{\GobbleColumnStop}}
+\newcommand{\V}{\ensuremath{\surd}}
+\newcommand{\YSM}{\ensuremath{\text{YSM}}\xspace}
+\graphicspath{{./}{cartoons/}{images/}}
+
+\title{Causal Inference}
+\author{Ott Toomet}
+
+\begin{document}
+\lstset{language=Python}
+
+\begin{frame}
+  \maketitle
+\end{frame}
+
+\begin{frame}
+  \tableofcontents
+\end{frame}
+
+\begin{frame}
+\frametitle{Where We Stand}
+\begin{columns}
+  \begin{column}{0.5\linewidth}
+    \begin{itemize}
+    \item Introduction
+    \item Methods
+      \begin{itemize}
+      \item python, pandas
+      \item Linear algebra
+      \item Probability and statistics
+      \end{itemize}
+    \item Guest speaker
+    \item Linear regression
+      \begin{itemize}
+      \item \alert{Causality}
+      \end{itemize}
+    \item ML
+      \begin{itemize}
+      \item Experiment design
+      \item Nearest neighbors
+      \end{itemize}
+    \end{itemize}
+  \end{column}
+  \begin{column}{0.5\linewidth}
+    \begin{itemize}
+    \item Methods
+      \begin{itemize}
+      \item Gradient Descent 
+      \item Maximum Likelihood, logit
+      \item regularization
+      \end{itemize}
+    \item ML
+      \begin{itemize}
+      \item Naive bayes
+      \item PCA/dimensionality reduction
+      \item Clusters \& recommenders
+      \item Trees and forests
+      \item Neural networks
+      \end{itemize}
+    \item Wrap-up
+    \end{itemize}
+  \end{column}
+\end{columns}
+\end{frame}
+
+\section[Example]{Motivating Example}
+\frame{\tableofcontents[currentsection]}
+
+\begin{frame}
+  \frametitle{Does Flu Shot Help to Avoid Illness?}
+  \begin{itemize}
+  \item Collect data (get medical data):
+    \begin{center}
+      \begin{tabular}{lrrr}
+        \toprule
+        gotFlu & fluShot \\
+        \midrule
+        1 & 0 \\
+        0 & 1 \\
+        \dots & \dots\\
+        \bottomrule
+      \end{tabular}
+    \end{center}
+  \item Run a regression:
+    \begin{equation*}
+      \text{gotFlu}_{i} = \alpha + \beta \cdot \text{fluShot}_{i} + \epsilon_{i}
+    \end{equation*}
+  \item We want to know $\beta$
+    \begin{itemize}
+    \item What does the regression tell?
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\section[Impact]{What is Impact}
+\frame{\tableofcontents[currentsection]}
+
+\begin{frame}
+  \frametitle{A Causal Question}
+  \begin{itemize}
+  \item Many important questions are causal
+    \begin{itemize}
+    \item Does college pay off?
+    \item Which career path should I choose?
+    \item Does the drug cure illness?
+    \item Does the advertisement work?
+    \end{itemize}
+  \item These models can be written as
+    \begin{equation*}
+      Y_{i} = \alpha + \beta \cdot T_{i} + \epsilon_{i}
+    \end{equation*}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{What is Impact?}
+  We want \emph{numeric estimate} of the causal
+  effect of our intervention
+  \begin{itemize}
+  \item $Y(1)$: outcome when treated ($T=1$)
+  \item $Y(0)$: when not treated ($T=0$)
+  \item The \emph{treatment effect}:
+    \begin{equation*}
+      Y(1)_{i} - Y(0)_{i} = \beta
+    \end{equation*}
+  \item \alert{Only observe} $Y(0)$ or $Y(1)$ but never both! 
+  \end{itemize}
+\end{frame}
+
+\section[Counterfactual]{Curse of Counterfactual}
+\frame{\tableofcontents[currentsection]}
+
+\begin{frame}
+  \frametitle{Ordinary Data}
+  Take our model:
+  \begin{equation*}
+    \text{gotFlu}_{i} = \alpha + \beta \cdot \text{fluShot}_{i} + \epsilon_{i}
+  \end{equation*}
+  Estimate the regression model \hyperlink{proof}{\beamerbutton{proof}}:
+  \begin{multline*}
+    \E [Y(1) - Y(0)] =
+    \E Y(1) - \E Y(0) =
+    \\
+    = \E [ \alpha + \beta \cdot 1 + \epsilon | T=1]
+    - \E [ \alpha + \beta \cdot 0 + \epsilon | T=0] =
+    \\
+    =
+    \beta + \E [\epsilon|T = 1] - \E [\epsilon |T =0]
+  \end{multline*}
+  This is not $\beta$
+  \begin{itemize}
+  \item unless $\E [\epsilon|T = 1] - \E [\epsilon |T = 0] = 0$
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{What Does Regression Do}
+  Regression compares $Y$ for two groups: $T=0$ and $T=1$.
+  \begin{itemize}
+  \item And that's it.
+  \item It is ``just correlation''
+  \item In order to interpret it causally, we have to ensure $T
+    \independent \epsilon$
+    \begin{itemize}
+    \item i.e. treatment is unrelated to the potential outcome
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\section[Estimators]{Methods for Measuring Impact}
+
+\subsection[RCT]{Randomized Experiments}
+\frame{\tableofcontents[currentsubsection]}
+
+{
+\setbeamercolor{background canvas}{bg=}
+\includepdf[pages=6-7]{econometrics_2_impact.pdf}
+\includepdf[pages=2, scale=2.1, offset=0mm -38mm]{../readings/smith-pell_BMJ2003.pdf}
+}
+
+\subsection{Cross-Section}
+\frame{\tableofcontents[currentsubsection]}
+
+{
+\setbeamercolor{background canvas}{bg=}
+\includepdf[pages=11-15]{econometrics_2_impact.pdf}
+}
+
+\subsection{Before-and-After}
+\frame{\tableofcontents[currentsubsection]}
+
+{
+\setbeamercolor{background canvas}{bg=}
+\includepdf[pages=16-20]{econometrics_2_impact.pdf}
+}
+
+
+\subsection[Dif-in-Dif]{Differences-in-Differences}
+\frame{\tableofcontents[currentsubsection]}
+
+{
+\setbeamercolor{background canvas}{bg=}
+\includepdf[pages=21-23]{econometrics_2_impact.pdf}
+}
+
+\section{Progresa Example}
+\frame{\tableofcontents[currentsection]}
+
+{
+\setbeamercolor{background canvas}{bg=}
+\includepdf[pages=26-33]{econometrics_2_impact.pdf}
+}
+
+\section*{Regression Model Proof}
+
+
+\begin{frame}
+  \label{proof}
+  \frametitle{Regression Model Proof}
+  Model:
+  \begin{description}
+  \item[$N^T$] treated 
+  \item[$N^{NT}$] non-treated
+  \item[$N = N^{T} + N^{NT}$] observations
+  \item Two variables: constant $1$ and treatment $T$.
+  \end{description}
+  \begin{columns}
+    \begin{column}{0.49\linewidth}
+      \begin{equation*}
+        \begin{split}
+          \text{Treated data:}
+          \\
+          \mat{X}^{T} = \left.
+            \begin{pmatrix}
+              1 & 1 \\ 1 & 1 \\ \vdots & \vdots \\ 1 & 1\\
+            \end{pmatrix}
+          \right\}
+          N^{T}
+        \end{split}
+      \end{equation*}
+    \end{column}
+    \begin{column}{0.49\linewidth}
+      \begin{equation*}
+        \begin{split}
+          \text{Non-treated data:}
+          \\
+          \mat{X}^{NT} = \left.
+            \begin{pmatrix}
+              1 & 0 \\ 1 & 0 \\ \vdots & \vdots \\ 1 & 0\\
+            \end{pmatrix}
+          \right\}
+          N^{NT}
+        \end{split}
+      \end{equation*}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Proof 2}
+  The final data:
+  \bigskip
+  \begin{columns}
+    \begin{column}{0.49\linewidth}
+      \begin{equation*}
+        \mat{X} = \left.
+          \begin{pmatrix}
+            1 & 0 \\ 1 & 0 \\ \vdots & \vdots \\ 1 & 0\\
+            1 & 1 \\ \vdots & \vdots \\ 1 & 1\\
+          \end{pmatrix}
+        \right\}
+        N
+      \end{equation*}
+    \end{column}  
+    \begin{column}{0.49\linewidth}
+      \begin{equation*}
+        \vec{y} =
+          \begin{pmatrix}
+            y_{1} \\ y_{2} \\ \vdots \\ y_{N}
+          \end{pmatrix}
+      \end{equation*}
+    \end{column}  
+  \end{columns}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Proof 3}
+  Calculate $(\mat{X}'\mat{X})^{-1} \mat{X}' \vec{y}$:
+  \begin{align*}
+    \mat{X}'\mat{X}
+    & =
+      \begin{pmatrix}
+        N & N^{T} \\ N^{T} & N^{T}\\
+      \end{pmatrix}
+    \\[2ex]
+    (\mat{X}'\mat{X})^{-1}
+    & = 
+      \frac{1}{N\cdot N^{T} - N^{T} \cdot N^{T}}
+      \begin{pmatrix}
+        N^{T} & -N^{T} \\ -N^{T} & N\\
+      \end{pmatrix}
+    \\[2ex]
+    & =
+      \frac{1}{N^{T}} \frac{1}{N^{NT}}
+      \begin{pmatrix}
+        N^{T} & -N^{T} \\ -N^{T} & N\\
+      \end{pmatrix}
+    \\[2ex]
+    \mat{X}' \vec{y} 
+    &=
+      \begin{pmatrix}
+        \sum_{i=1}^{N} y_{i} \\[2ex]
+        \sum_{i=1, T_{i} = 1}^{N} y_{i} \\
+      \end{pmatrix}
+    \equiv
+      \begin{pmatrix}
+        Y \\ Y^{T}
+      \end{pmatrix}
+  \end{align*}
+\end{frame}
+  
+\begin{frame}
+  \frametitle{Proof 4}
+  Now compute $\vec{\beta}$:
+  \bigskip
+  \begin{align*}
+    \vec{\beta}
+    &=
+      \frac{1}{N^{T}} \frac{1}{N^{NT}}
+      \begin{pmatrix}
+        N^{T} & -N^{T} \\ -N^{T} & N\\
+      \end{pmatrix}
+    \cdot
+      \begin{pmatrix}
+        Y \\ Y^{T}
+      \end{pmatrix}
+    \\[2ex]
+    &=
+      \frac{1}{N^{T}} \frac{1}{N^{NT}}
+      \begin{pmatrix}
+        N^{T} \cdot Y - N^{T} \cdot Y^{T} \\
+        -N^{T} \cdot Y + N \cdot Y^{T}
+      \end{pmatrix}
+  \end{align*}
+  Look at the second component:
+  \begin{align*}
+    \beta^{T} 
+    &=
+      \frac{1}{N^{T}} \frac{1}{N^{NT}}
+      \left(   -N^{T} \cdot Y + N \cdot Y^{T} \right)
+    \\[2ex] 
+    &= 
+      \frac{1}{N^{T}} \frac{1}{N^{NT}}
+      \left[
+      -N^{T}\left( Y^{NT} + Y^{T} \right)
+      +(N^{T} + N^{NT}) Y^{T} 
+      \right]
+    \\[2ex] 
+    &= 
+      \frac{1}{N^{T}} Y^{T} - \frac{1}{N^{NT}} Y^{NT}
+  \end{align*}
+\end{frame}
+
+\end{document}

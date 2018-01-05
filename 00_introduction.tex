@@ -1,0 +1,410 @@
+\documentclass[mathserif, xcolor=table, svgnames]{beamer}
+\mode<presentation>
+{
+  \usetheme{Hannover}
+  \setbeamercovered{transparent}
+}
+\usepackage[english]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsthm}
+\usepackage{array,xspace}
+\usepackage{dcolumn}
+\usepackage{eulervm}
+\usepackage{eurosym}
+\usepackage{graphicx}
+\input{isomath.tex}
+\usepackage{booktabs, multicol, multirow}
+\usepackage{listings}
+\usepackage{relsize}
+\usepackage{wasysym}
+
+\colorlet{OurColor}{LawnGreen!40}
+\colorlet{ShadedRowColor}{LightSkyBlue!40}
+
+\newcommand{\individuals}{\mathbbm{I}}
+\newtheorem{proposition}{Proposition}
+\newcommand{\std}[1]{\small\color{lightgray}{#1}}
+\long\def\GobbleColumnStart#1\GobbleColumnStop{}
+\let\GobbleColumnStop\relax
+\newcolumntype{i}{>{\GobbleColumnStart}c<{\GobbleColumnStop}}
+\newcommand{\V}{\ensuremath{\surd}}
+\graphicspath{{./}{cartoons/}{images/}}
+
+\title[INFX 574]{Data Science: Machine Learning \& Econometrics}
+\author{Ott Toomet}
+\begin{document}
+\lstset{language=Python}
+
+\begin{frame}
+  \maketitle
+\end{frame}
+
+\begin{frame}
+  \tableofcontents
+\end{frame}
+
+\section{Teachers}
+
+\begin{frame}
+  \frametitle{Me}
+  \begin{columns}
+    \begin{column}{0.5\linewidth}
+      \begin{block}{}
+        \includegraphics[width=0.9\linewidth]{ott.jpg}
+      \end{block}
+    \end{column}
+    \begin{column}{0.5\linewidth}
+      \begin{itemize}
+      \item Economist/computational social scientist
+        \begin{itemize}
+        \item surveys, cellphone data, government registries
+        \item statistical software development
+        \item Social networks, segregation, causal analysis
+        \end{itemize}
+      \end{itemize}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Srijan}
+  \begin{columns}
+    \begin{column}{0.5\linewidth}
+      \begin{block}{}
+        \includegraphics[width=0.9\linewidth]{srijan.jpg}
+      \end{block}
+    \end{column}
+    \begin{column}{0.5\linewidth}
+      \begin{itemize}
+      \item 2nd year MA student at iSchool
+      \end{itemize}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}
+  \frametitle{ATT of Training}
+  \includegraphics[width=0.9\linewidth]{11_sfs_att_employment_parttime.pdf}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Call Activity in Afghanistan}
+  \includegraphics[width=1.2\linewidth]{pca_2015-02-01.png}
+\end{frame}
+
+\section{Objectives and Rules}
+
+
+\begin{frame}
+  \frametitle{Course Objectives}
+  \includegraphics[width=\linewidth]{prove_or_disprove.png}
+\end{frame}
+
+\begin{frame}
+  \begin{itemize}
+  \item Get an overview of common econometric and machine learning
+    methods 
+  \item Become familiar with python (numpy)
+  \item Understand, design, and critique statistical methods for
+    common data types
+  \item Know the usage, advantages and disadvantages of supervised and
+    unsupervised methods
+  \item Implement selected algorithms
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{And Finally---Know the Limits of Data Science}
+  \includegraphics[width=\linewidth]{what-chance-does-data-have.png}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Requirements}
+  \begin{itemize}
+  \item Be reasonably familiar with programming
+    \begin{itemize}
+    \item Python knowledge is not necessary
+    \item \alert{but pick it up quickly!}
+    \end{itemize}
+  \item Basic knowledge of probability and statistics, matrix algebra
+    \begin{itemize}
+    \item A large chunk of machine learning are statistical models
+    \item Matrices is the way to handle data in code (and in theory ;-)
+    \end{itemize}
+  \item INFX 573 should give you most of this background
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Grading}
+  \begin{itemize}
+  \item 5 Problem sets (70\%), 
+  \item 2 Quizzes/mini-assignments (15\%)
+  \item 9 Labs, participation (15\%)
+  \item Assignemnts:
+    \begin{itemize}
+    \item Submit by deadline!
+    \item Normally on canvas
+    \item Late = points deducted (0.5 pt per hour late).
+    \item Do it yourself
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Calendar}
+  \begin{itemize}
+  \item Classes Tue, Thu 3:30--5:20 MGH 251
+  \item Assignments due (by 3:30pm):
+    \begin{itemize}
+    \item April 13 (python, pandas)
+    \item April 27 (linear regression, causality)
+    \item May 9 (kNN, cross-validation)
+    \item May 23 (gradient descent, maximum likelihood)
+    \item June 2 (naive Bayes, PCA)
+    \end{itemize}
+  \item Quizzes
+    \begin{itemize}
+    \item April 18
+    \item May 11
+    \item June 1
+    \end{itemize}
+  \item Attend research seminar
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Schedule}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Textbooks}
+  
+\end{frame}
+
+
+\section[Topic]{What Is Data Science?}
+
+\begin{frame}
+  \frametitle{What Is Data Science?}
+  \begin{center}
+    \includegraphics[width=\linewidth]{fortune_teller_predictive_analyst.jpg}
+  \end{center}
+\end{frame}
+
+
+\begin{frame}
+\frametitle{Data}
+\begin{itemize}
+\item Information stored on computers and what we can analyze
+\item Collecting data \emph{much} easier than earlier
+\item $\Rightarrow$ Big Data: cannot be easily analyzed with the off-the-shelf
+  software
+  \begin{itemize}
+  \item large volume (>TB)
+    \begin{itemize}
+    \item Satellite images, Walmart prices
+    \end{itemize}
+  \item Speed of production
+    \begin{itemize}
+    \item CDR, stock prices, social media, CERN
+    \end{itemize}
+  \item Variety: text, video, images, ...
+    \begin{itemize}
+    \item Amazon, Google
+    \item Usually varying quality
+    \end{itemize}
+  \end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Data Science}
+How to handle such data
+\begin{enumerate}
+\item Define the (exact) problem
+  \begin{itemize}
+  \item (Social) science
+  \end{itemize}
+\item Find and explore the relevant data
+  \begin{itemize}
+  \item Computer, visualization literacy
+  \end{itemize}
+\item Design analytic framework
+  \begin{itemize}
+  \item Statistics
+  \end{itemize}
+\item Implement analysis
+  \begin{itemize}
+  \item Programming, algorithms, software
+  \end{itemize}
+\item Communicate
+  \begin{itemize}
+  \item Visualization, communication
+  \end{itemize}
+\end{enumerate}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Skills}
+  A good data scientist is
+  \begin{itemize}
+  \item (Social) scientist: can identify meaningful and feasible
+    problems 
+  \item Computer scientist: knows algorithms, data structures,
+    security, technological solutions
+  \item Programmer: can implement the algorithms
+  \item Hacker: can squeeze a lot out of computers
+  \item PR consultant: can tell a story
+  \item Lawyer: knows regulations around privacy and security
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Computer Skills}
+  \begin{itemize}
+  \item Programming
+    \begin{itemize}
+    \item Regular expressions
+    \item Scripting: bash, python, R, php, perl, \dots
+    \item General: C(++), java, scala, \dots
+    \item Data structures: maps, sets, graphs, \dots
+    \end{itemize}
+  \item Statistics
+    \begin{itemize}
+    \item \alert{Linear algebra, calculus, inference}, \dots
+    \item \alert{Machine learning, predictive modeling}, \dots
+    \item Network analysis
+    \item Statistical software: R, \alert{numpy, scipy}, stata, matlab, \dots
+    \end{itemize}
+  \item Scalable data management
+    \begin{itemize}
+    \item hadoop, mapreduce, spark, \dots
+    \item sql, nosql, Hive, \dots
+    \end{itemize}
+  \item Visualization
+    \begin{itemize}
+    \item ggplot, D3, tableau, \dots
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+
+\section{Test}
+
+\begin{frame}
+  \begin{itemize}
+  \item True or False (or ``don't know'')?
+  \end{itemize}
+  \begin{equation*}
+    \begin{bmatrix}
+      1 & 2\\
+    \end{bmatrix}
+    \cdot
+    \begin{bmatrix}
+      3 \\ 4\\
+    \end{bmatrix}
+    = 
+    \begin{bmatrix}
+      3 & 4 \\
+      6 & 8 \\
+    \end{bmatrix}?
+  \end{equation*}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Determinant}
+  \begin{equation*}
+    \left|
+    \begin{bmatrix}
+      1 & 2 \\
+      3 & 4 \\
+    \end{bmatrix}
+    \right|
+    = -2?
+  \end{equation*}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Eigenvalues}
+  Eigenvalues of
+  \begin{equation*}
+    \begin{bmatrix}
+      1 & 0 \\
+      0 & 2 \\
+    \end{bmatrix}
+  \end{equation*}
+  are
+  \begin{equation*}
+    1 \qquad\text{and}\qquad 1/2?
+  \end{equation*}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Expected Value}
+  Expected value of a standard normal random variable is 1
+\end{frame}
+
+\begin{frame}
+  \frametitle{Distribution Function}
+  Which graph is \emph{cumulative distribution function} of a standard
+  uniform random variable?
+  \includegraphics[width=0.9\linewidth]{uniform.pdf}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Derivative}
+  Let
+  \begin{equation*}
+    f(u, \kappa) = a + \pi\, u + 2\kappa u^{4} + \log u
+  \end{equation*}
+  Now
+  \begin{equation*}
+    \pderiv[f]{\kappa} = \pi + 8\kappa u^{3} - \frac{1}{u}
+  \end{equation*}
+\end{frame}
+
+
+\section[ML]{Machine Learning}
+
+\begin{frame}
+  \frametitle{Learn!}
+  \begin{columns}
+    \begin{column}{0.5\linewidth}
+      \includegraphics[width=0.9\linewidth]{class_a.jpg}
+    \end{column}
+    \begin{column}{0.5\linewidth}
+      \includegraphics[width=0.9\linewidth]{class_b.jpg}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Predict!}
+  \includegraphics[width=0.7\linewidth]{class_todo.jpg}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Generalization Counts}
+  \begin{itemize}
+  \item We observe a very thiny sample of the potential patterns
+    \begin{itemize}
+    \item Example: 10k words in dictionary $\Rightarrow$
+      $2^{10,000} \approx 10^{3,000}$ different combinations
+    \item Compare with:
+      \begin{itemize}
+      \item particles in the visible universe: $\sim 10^{90}$ 
+      \item  age of Universe: $\sim \cdot 10^{18}$s
+      \end{itemize}
+    \item Still have to classify spam/non-spam
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+
+
+\end{document}

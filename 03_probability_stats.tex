@@ -1,0 +1,581 @@
+\documentclass[mathserif, xcolor=table, svgnames]{beamer}
+\mode<presentation>
+{
+  \usetheme{Hannover}
+  \setbeamercovered{transparent}
+}
+\usepackage[english]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsthm}
+\usepackage{array,xspace}
+\usepackage{dcolumn}
+\usepackage{eulervm}
+\usepackage{eurosym}
+\usepackage{graphicx}
+\input{isomath.tex}
+\usepackage{booktabs, multicol, multirow}
+\usepackage{listings}
+\usepackage{relsize}
+\usepackage{wasysym}
+
+\colorlet{OurColor}{LawnGreen!40}
+\colorlet{ShadedRowColor}{LightSkyBlue!40}
+
+\newcommand{\eur}{\EUR{}}
+\newcommand{\individuals}{\mathbbm{I}}
+\newtheorem{proposition}{Proposition}
+\newcommand{\std}[1]{\small\color{lightgray}{#1}}
+\long\def\GobbleColumnStart#1\GobbleColumnStop{}
+\let\GobbleColumnStop\relax
+\newcolumntype{i}{>{\GobbleColumnStart}c<{\GobbleColumnStop}}
+\newcommand{\V}{\ensuremath{\surd}}
+\newcommand{\YSM}{\ensuremath{\text{YSM}}\xspace}
+\graphicspath{{./}{cartoons/}{images/}}
+
+\title{Probability and Statistics\\
+A quick wrap-up}
+\author{Ott Toomet}
+
+\begin{document}
+\lstset{language=Python}
+
+\begin{frame}
+  \maketitle
+\end{frame}
+
+\begin{frame}
+  \tableofcontents
+\end{frame}
+
+\section{Advertisement}
+
+\begin{frame}
+  \frametitle{Quiz1 - When?}
+  \begin{itemize}
+  \item Clash with career fair?
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Advertisement}
+  \begin{center}
+    \includegraphics[width=0.8\linewidth]{DYADS_Seminar_Series_2017_Paxton.pdf}
+  \end{center}
+\end{frame}
+
+\begin{frame}
+\frametitle{Where We Stand}
+\begin{columns}
+  \begin{column}{0.5\linewidth}
+    \begin{itemize}
+    \item Introduction
+    \item Methods
+      \begin{itemize}
+      \item python, pandas
+      \item Linear algebra
+      \end{itemize}
+    \item Guest speaker
+      \begin{itemize}
+      \item \alert{Probability and statistics}
+      \end{itemize}
+    \item Linear regression
+      \begin{itemize}
+      \item Causality
+      \end{itemize}
+    \item ML
+      \begin{itemize}
+      \item Experiment design
+      \item Nearest neighbors
+      \end{itemize}
+    \end{itemize}
+  \end{column}
+  \begin{column}{0.5\linewidth}
+    \begin{itemize}
+    \item Methods
+      \begin{itemize}
+      \item Gradient Descent 
+      \item Maximum Likelihood, logit
+      \item regularization
+      \end{itemize}
+    \item ML
+      \begin{itemize}
+      \item Naive bayes
+      \item PCA/dimensionality reduction
+      \item Clusters \& recommenders
+      \item Trees and forests
+      \item Neural networks
+      \end{itemize}
+    \item Wrap-up
+    \end{itemize}
+  \end{column}
+\end{columns}
+\end{frame}
+
+\section{Why Probability}
+
+\begin{frame}
+  \frametitle{Why Probability in Data Science?}
+  \begin{itemize}
+  \item Data is imprecise
+    \begin{itemize}
+    \item We model missing information as random processes
+    \end{itemize}
+  \item Our models are wrong
+    \begin{itemize}
+    \item We can model the errors as random processes
+    \end{itemize}
+    \pause
+  \item Rule-based learning
+    \begin{itemize}
+    \item in case we know \emph{all} relevant information
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Question:}
+  \begin{quotation}
+    Family has 2 children.  One of them is a boy.  What is
+    the probability that the other is a boy too?
+  \end{quotation}
+  Assume a simple world:
+  \begin{itemize}
+  \item $\Pr(\text{boy}) = \Pr(\text{girl}) = 0.5$
+    \begin{itemize}
+    \item ( $= 0.512$ in developed countries)
+    \end{itemize}
+  \item The gender of the second child is independent of the gender of
+    the first child.
+    \begin{itemize}
+    \item (in practice slightly positively correlated $r \approx 0.015$)
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\section{Events and Probabilities}
+
+\begin{frame}
+  \frametitle{Sample Space}
+  \begin{itemize}
+  \item Set of all possible events
+    \begin{itemize}
+    \item Toss a coin: $S = \{H, T\}$
+    \item Roll two dice:
+      \begin{equation*}
+        S = \left\{
+          \begin{split}
+            (1,1), (1,2), \dots, (1,6)\\
+            (2,1), (2,2), \dots, (2,6)\\
+            \dots \qquad\\
+            (6,1), (6,2), \dots, (6,6)\\
+          \end{split}
+        \right\}
+      \end{equation*}
+    \item Flight time:
+      \begin{equation*}
+        S = [0, \infty)
+      \end{equation*}
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+\frametitle{Events \& Probabilities}
+\begin{description}
+\item[event] is a subset $E$ of $S$
+  \begin{itemize}
+  \item Example: flight time b/w 1 and 2 hours: 
+    \begin{equation*}
+      E = [1,2] \subset [0, \infty)
+    \end{equation*}
+  \item Event of either $E$ or $F$:
+    \begin{equation*}
+      G = E \cup F
+    \end{equation*}
+  \item Event of both $E$ and $F$:
+    \begin{equation*}
+      G = EF \equiv E \cap F
+    \end{equation*}
+  \end{itemize}
+\end{description}
+\end{frame}
+
+\begin{frame}
+\frametitle{Probability}
+\begin{itemize}
+\item Probability $P$: $\{E : E \subseteq S\} \rightarrow \Real$:
+  \begin{itemize}
+  \item $0 \le P(E) \le 1$
+  \item $P(S) = 1$
+  \item For mutually exclusive events
+    \begin{equation}
+      P \left( \cup_{n} E_{n} \right)
+      =
+      \sum_{n} P(E_{n})
+    \end{equation}
+  \end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Conditional Probability}
+  \begin{itemize}
+  \item Bayes' theorem:
+    \begin{equation*}
+      P(E|F) = \frac{P(EF)}{P(F)}
+    \end{equation*}
+  \item Solve the children example ...
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{How Good is the Test?}
+  There is a disease $D$ and a test $T$.
+  \begin{itemize}
+  \item 0.05\% of population has the disease
+  \item has the disease $\Rightarrow$ test is positive 95\% of
+    cases
+  \item has not $\Rightarrow$ test is positive 1\% of cases.
+  \end{itemize}
+  What is the probability of disease if the test is positive?
+\end{frame}
+
+\begin{frame}
+  \frametitle{Solution}
+  We have
+  \begin{align*}
+    \Pr(D = 1) & = 0.005 & \Pr(D = 0) &= 0.995 \\
+    \Pr(T=1|D=0) &= 0.01 & \Pr(T=1|D=1) &= 0.95
+  \end{align*}
+  We need
+  \begin{equation*}
+    \Pr(D=1|T=1)
+  \end{equation*}
+  From Bayes' theorem:
+  \begin{equation*}
+    \Pr(D=1|T=1)
+    =
+    \frac{\Pr(D=1, T=1)}{\Pr(T=1)}
+  \end{equation*}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Solution 2}
+  Compute numerator, denominator:
+  \begin{equation*}
+    \Pr(D=1, T=1) = \Pr(T=1|D=1) \cdot \Pr(D=1) \equiv A
+  \end{equation*}
+  and
+  \begin{multline*}
+    \Pr(T=1) = 
+    \Pr(T=1|D=0) \cdot \Pr(D=0) +
+    \\
+    + \Pr(T=1|D=1) \cdot \Pr(D=1) 
+    \equiv B + A
+  \end{multline*}
+  and hence
+  \begin{equation*}
+    \Pr(D=1|T=1)
+    =
+    \frac{A}{B + A} \approx 0.323
+  \end{equation*}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Independent Events}
+  \begin{itemize}
+  \item $P(EF) = P(E)P(F)$
+  \item $P(E|F) = P(E)$
+  \item Intuition: knowledge of $F$ (data) does not say anything about
+    $E$ (label)
+  \item Example: toss a coin, get head.  Does it say anything about
+    the next toss?
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \begin{columns}
+    \begin{column}{0.7\linewidth}
+      \begin{quotation}
+        A dresser drawer contains one pair of socks with each of the
+        following colors: blue, brown, red, white and black. Each pair is
+        folded together in a matching set. You reach into the sock drawer
+        and choose a pair of socks without looking. You replace this pair
+        and then choose another pair of socks. What is the probability
+        that you will choose the red pair of socks both times?
+      \end{quotation}
+    \end{column}
+    \begin{column}{0.3\linewidth}
+      \includegraphics[width=\linewidth]{socks_drawer.png}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\section{Random Variables}
+
+\begin{frame}
+  \frametitle{Random Variable (RV)}
+  \begin{itemize}
+  \item Random Variable $X$ is
+    \begin{equation*}
+      X: S \rightarrow \Real
+    \end{equation*}
+    (Note: it is neither random nor variable \smiley)
+  \item Examples:
+    \begin{itemize}
+    \item number on die
+    \item sum of numbers on two dice 
+    \item income
+    \item would this person be willing to buy a ticket?
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Modeling with Random Variables}
+  \includegraphics[width=0.7\linewidth]{experiments_with_random_numbers.jpg}
+  \begin{itemize}
+    \item Uncertain outcomes are modeled as RV-s
+      \begin{itemize}
+      \item Be careful when choosing one!
+      \end{itemize}
+    \item The probability is estimated by ML methods
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Discrete RV}
+  \begin{itemize}
+  \item Discrete: can take discrete (countable) values
+  \item Probability mass function:
+    \begin{equation*}
+      p(a) = P(X = a)
+    \end{equation*}
+  \item Cumulative distribution function
+    \begin{equation*}
+      F(a) = \sum_{i: x_{i} \le a} p(x_{i})
+    \end{equation*}
+  \item Examples:
+    \begin{itemize}
+    \item Bernoulli distribution:
+      \begin{align*}
+        p(0) &= P(X = 0) = 1 - p\\
+        p(1) &= P(X = 1) = p
+      \end{align*}
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Binomial Distribution}
+  \begin{itemize}
+  \item Repeat Bernoulli-$p$ process $n$ times:
+    \begin{equation*}
+      p(x) = \Pr(X = x) = C_{x}^{n} \, p^{x} (1 - p)^{n - x}
+    \end{equation*}
+    $C_{x}^{n} = \frac{n!}{x!(n - x)!}$ number of combinations of $n$
+    elements by $x$.
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Continuous RV}
+  \begin{itemize}
+  \item Continuous: can take values on continuum (uncountable) set
+    $\Real$
+  \item Probability density function
+    \begin{equation*}
+      f(x) : P(x \in B) = \int_{B} f(x) \dif x
+    \end{equation*}
+  \item A single value occurs with probability zero (\emph{almost
+      never}):
+    \begin{equation*}
+      P(X = a) = \int_{a}^{a} f(x) \dif x = 0
+    \end{equation*}
+    Note: this is not the same as impossible event!
+  \item Cumulative distribution function:
+    \begin{equation*}
+      F(a) = P(X \le a) = \int_{-\infty}^{a} f(x) \dif x
+    \end{equation*}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Continuous RV Examples}
+  \begin{description}
+  \item Uniform distribution: $X \sim \text{Unif}(0,1)$:
+    \begin{equation*}
+      f(x) =
+      \begin{cases}
+        1, & 0 \le x \le 1\\
+        0, & \text{otherwise}
+      \end{cases}
+    \end{equation*}
+  \item Normal distribution: $X \sim N(\mu,\sigma^{2})$:
+    \begin{equation*}
+      f(x) = \frac{1}{\sqrt{2\pi} \sigma}
+      \exp\left(
+        -\frac{1}{2} \frac{(x - \mu)^{2}}{\sigma^{2}}
+        \right)
+    \end{equation*}
+  \end{description}
+\end{frame}
+
+\section{Expectation}
+
+\begin{frame}
+  \frametitle{Expectation}
+  \begin{itemize}
+  \item Discrete case:
+    \begin{equation*}
+      \E X \equiv \sum_{x} x p(x)
+    \end{equation*}
+    \begin{itemize}
+    \item Example: expected value of coin toss (Bernoulli RV):
+      \begin{equation*}
+        E X = \frac{1}{2} \cdot 0 +
+        \frac{1}{2} \cdot 1
+        = \frac{1}{2}
+      \end{equation*}
+    \end{itemize}
+  \item Continuous case:
+    \begin{equation*}
+      \E X = \int_{-\infty}^{\infty} f(x) \dif x
+    \end{equation*}
+    \begin{itemize}
+    \item Example: uniform distribution:
+      \begin{equation*}
+        \E X = \int_0^{1} x \dif x
+        =
+        \left. \frac{1}{2} x^{2} 
+      \right|_{x=0}^{x=1}
+      = \frac{1}{2}
+      \end{equation*}
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Notes:}
+  \begin{itemize}
+  \item Expectation is a property of RV
+  \item It is \emph{not} sample mean!
+  \item But they are related:
+  \end{itemize}
+  \begin{theorem}
+    Law of Large Numbers:
+    \begin{equation*}
+      \bar X_{n} = \frac{1}{n} \sum_{i=1}^{n} X_{i}
+      \rightarrow \E X
+      \quad\text{as}\quad
+      n \rightarrow \infty
+    \end{equation*}
+  \end{theorem}
+  \begin{theorem}
+    Expectation is linear operator
+    \begin{equation*}
+      \E [aX + b] = a\E[X] + b
+    \end{equation*}
+  \end{theorem}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Variance}
+  \begin{itemize}
+  \item Variance
+    \begin{equation*}
+      \var X = \E [(X - \E X)^{2} ]
+      = \E [X^{2}] - (E[X])^{2}
+    \end{equation*}
+  \end{itemize}
+\end{frame}
+
+\section{Jointly Distributed RV-s}
+
+\begin{frame}
+  \frametitle{Joint Distribution Function}
+  \begin{equation*}
+    F(a,b) = P( X \le a, Y \le b)
+  \end{equation*}
+  \begin{itemize}
+  \item Marginal distributions:
+    \begin{equation*}
+      F_{X}(a) = P(X \le a)
+      = P(X \le a, Y < \infty)
+      = F(a, \infty)
+    \end{equation*}
+  \end{itemize}
+\end{frame} 
+
+\begin{frame}
+  \frametitle{Discrete Case}
+  \begin{itemize}
+  \item joint probability mass function
+    \begin{equation*}
+      p(x,y) = P(X = x, Y=y)
+    \end{equation*}
+  \item Marginal mass function:
+    \begin{equation*}
+      p_{X} (x) = \sum_{y} p(x,y)
+    \end{equation*}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Continuous Case}
+  \begin{itemize}
+  \item joint probability density function
+    \begin{equation*}
+      P(X \in A, Y\ in B)
+      =
+      \int_{A} \int_{B} f(x,y) \dif X\, dif Y
+    \end{equation*}
+  \item Marginal density
+    \begin{equation*}
+      f_{X}(x) = \int_{-\infty}^{\infty} f(x,y) \dif y
+    \end{equation*}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Covariance}
+  \begin{equation*}
+    \cov X,Y = \E [(X - \E X)(Y - \E Y) ]
+    = \E [X Y] - E[X] \cdot \E[Y]
+  \end{equation*}
+  \begin{itemize}
+  \item Properties:
+    \begin{itemize}
+    \item $\cov(X,X) = \var X$
+    \item $\cov(X,Y) = \cov(Y, X)$
+    \item $\cov(\lambda X, Y) = \lambda \cov(X, Y)$
+    \item $\cov(X, Y + Z) = \cov(X, Y) + \cov(X, Z)$
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\section{Conditional Probability}
+
+\begin{frame}
+  \frametitle{Conditional Probability}
+  Conditional probability mass function
+  \begin{equation*}
+    p_{X|Y} = P(X = x|Y = y)
+    =
+    \frac{P(X = x, Y=y}{P(Y = y)}
+    =
+    \frac{p(x,y)}{p_{Y}(y)}
+  \end{equation*}
+  Conditional expectation
+  \begin{equation*}
+    \E[X|Y = y] =
+    \sum_{x} P(X = X|Y = y)
+    =
+    \sum_{x} x p_{X|Y} (x|y)
+  \end{equation*}
+\end{frame}
+
+\end{document}

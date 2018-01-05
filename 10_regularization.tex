@@ -1,0 +1,420 @@
+\documentclass[mathserif, xcolor=table, svgnames]{beamer}
+\mode<presentation>
+{
+  \usetheme{Hannover}
+  \setbeamercovered{transparent}
+}
+\usepackage[english]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsthm}
+\usepackage{array,xspace}
+\usepackage{dcolumn}
+\usepackage{eulervm}
+\usepackage{eurosym}
+\usepackage{graphicx}
+\usepackage{booktabs, multicol, multirow}
+\usepackage{relsize}
+\usepackage{Sweave}
+\usepackage{wasysym}
+
+\input{isomath.tex}
+\colorlet{OurColor}{LawnGreen!40}
+\colorlet{ShadedRowColor}{LightSkyBlue!40}
+
+\newcommand{\eur}{\EUR{}}
+\newcommand{\individuals}{\mathbbm{I}}
+\newtheorem{proposition}{Proposition}
+\newcommand{\std}[1]{\small\color{lightgray}{#1}}
+\long\def\GobbleColumnStart#1\GobbleColumnStop{}
+\let\GobbleColumnStop\relax
+\newcolumntype{i}{>{\GobbleColumnStart}c<{\GobbleColumnStop}}
+\newcommand{\V}{\ensuremath{\surd}}
+\newcommand{\YSM}{\ensuremath{\text{YSM}}\xspace}
+\graphicspath{{./}{cartoons/}{images/}}
+
+\title{Regularization}
+\author{Ott Toomet}
+
+\begin{document}
+\setkeys{Gin}{width=\textwidth}
+
+\begin{frame}
+  \maketitle
+\end{frame}
+
+\begin{frame}
+  \tableofcontents
+\end{frame}
+
+\begin{frame}
+  \frametitle{The Big Picture}
+  \begin{columns}
+    \begin{column}{0.5\linewidth}
+      \begin{itemize}
+      \item Introduction
+      \item Methods
+        \begin{itemize}
+        \item python, pandas
+        \item Linear algebra
+        \item Probability and statistics
+        \end{itemize}
+      \item Guest speaker
+      \item Linear regression
+        \begin{itemize}
+        \item Causality
+        \end{itemize}
+      \item ML
+        \begin{itemize}
+        \item ML Experiment design
+        \item Nearest neighbors
+        \end{itemize}
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.5\linewidth}
+      \begin{itemize}
+      \item Methods
+        \begin{itemize}
+        \item Gradient Descent
+        \item Maximum Likelihood, Logistic Regression
+        \item \alert{Regularization}
+        \end{itemize}
+      \item ML
+        \begin{itemize}
+        \item Naive bayes
+        \item PCA/dimensionality reduction
+        \item Clusters \& recommenders
+        \item Trees and forests
+        \item Neural networks
+        \end{itemize}
+      \item Wrap-up
+      \end{itemize}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Commercial}
+  \includegraphics{mcsherry.jpg}
+\end{frame}
+
+\section{Review}
+\frame{\tableofcontents[currentsection]}
+
+\begin{frame}
+  \frametitle{Review}
+  \begin{itemize}
+  \item Likelihood function
+  \item Log-likelihood
+  \item Maximum Likelihood Estimator
+  \item Logistic distribution
+  \item Logistic regression (aka ``logit'')
+  \end{itemize}
+\end{frame}
+
+\section{Best Subset Selection}
+\frame{\tableofcontents[currentsection]}
+
+\begin{frame}
+  \frametitle{Best Subset Selection}
+  Problem: out of $p$ features select $k \le p$ that give the best fit
+  \begin{itemize}
+  \item Infeasible to search through all subsets if $p > 40$
+  \item Forward-Stepwise selection:
+    \begin{enumerate}
+    \item Start with the intercept
+    \item Add the feature that most improves the fit
+    \item[] Feasible for $p \gg 40$
+    \item[] and when $p > N$
+    \end{enumerate}
+  \item Backward-Stepwise selection
+    \begin{enumerate}
+    \item Start with full model
+    \item Remove the least important variable
+    \item[] feasible if $N > p$
+    \end{enumerate}
+  \item Problems:
+    \begin{itemize}
+    \item Discrete process: cannot adjust just a little bit
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\section{Penalized Optimization}
+
+\subsection{The Problem}
+\frame{\tableofcontents[currentsubsection]}
+
+\begin{frame}
+  \frametitle{The Problem}
+  \begin{itemize}
+  \item We have many features
+  \item All of them show some importance in our estimates
+    \begin{itemize}
+    \item sort of
+    \end{itemize}
+  \item How can we make the predictions more smooth?
+  \item How can we remove the little-important features?
+  \end{itemize}
+\end{frame}
+
+\subsection{Ridge Regression}
+\frame{\tableofcontents[currentsubsection]}
+
+\begin{frame}
+  \frametitle{Penalized Least Squares}
+  Instead of minimizing 
+  \begin{equation*}
+    \min_{\vec{\beta}} \, (\vec{y} - \mat{X}\vec{\beta})'(\vec{y} - \mat{X}\vec{\beta})
+  \end{equation*}
+  minimize
+  \begin{equation*}
+    \min_{\vec{\beta}} \, (\vec{y} - \mat{X}\vec{\beta})'(\vec{y} - \mat{X}\vec{\beta})
+    + 
+    \lambda P(\vec{\beta})
+  \end{equation*}
+  \begin{itemize}
+  \item $P(\vec{\beta})$ is the penalty term
+  \item $\lambda$ is the penalty parameter (a hyperparameter)
+    \begin{itemize}
+    \item $\lambda = 0 \quad \Rightarrow$ we have OLS
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Ridge Regression}
+  Ridge regression penalizes norm of $\vec{\beta}$
+  \begin{itemize}
+  \item Penalty term:
+    \begin{equation*}
+      P = \vec{\beta}' \mat{W} \vec{\beta}
+      =
+      || \mat{W}^{1/2} \vec{\beta} ||_{l_{2}}^{2}
+    \end{equation*}
+  \item $\mat{W}$ are the weights
+    \begin{itemize}
+    \item takes care of input scale
+    \item can put different weight on different features
+    \item zero for the intercept
+    \end{itemize}
+  \end{itemize}
+  \begin{equation}
+    \mat{W} =
+    \begin{pmatrix}
+      0 & 0 & \hdots & 0\\
+      0 & 1 & \hdots & 0\\
+      \vdots & \vdots &\ddots&\vdots\\
+      0 & 0 & \hdots & 1\\
+    \end{pmatrix}
+  \end{equation}
+  Now in non-matrix form
+  \begin{equation*}
+    L(\vec{\beta}) = \lambda \sum_{i=1}^{n} \beta_{j}^{2}
+  \end{equation*}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Equivalent Definition}
+  \begin{equation*}
+    \min_{\vec{\beta}} \, (\vec{y} - \mat{X}\vec{\beta})'(\vec{y} - \mat{X}\vec{\beta})
+  \end{equation*}
+  subject to
+  \begin{equation*}
+    \vec{\beta}' \mat{W} \vec{\beta} \le t
+  \end{equation*}
+  Note: $\lambda \not= t$!
+\end{frame}
+
+\begin{frame}
+  \frametitle{Why Is Small $||\vec{\beta}||$ Good?}
+  \begin{itemize}
+  \item Ensures that similar $\vec{X}$ corresponds to similar $Y$
+  \item Makes the linear model more similar to NN
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Analytic Solution}
+  \begin{equation*}
+    \min_{\vec{\beta}} S(\vec{\beta}) = (\vec{y} - \mat{X}\vec{\beta})'(\vec{y} - \mat{X}\vec{\beta})
+    + \lambda \vec{\beta}' \mat{W} \vec{\beta}
+  \end{equation*}
+  Optimality condition:
+  \begin{equation*}
+    \pderiv{\vec{\beta}}S(\vec{\beta}) = 0
+  \end{equation*}
+  \begin{align*}
+    \pderiv{\vec{\beta}}S(\vec{\beta})
+    &=
+    -2 \mat{X}' (\vec{y} - \mat{X}\vec{\beta}) + 2\lambda
+    \mat{W}\vec{\beta} = 0
+    \\
+    & \mat{X}'\mat{X} \vec{\beta} + \lambda \mat{W}\vec{\beta} = 
+      \mat{X}' \vec{y}
+    \\
+    \vec{\beta} &= (\mat{X}' \mat{X} + \lambda \mat{W})^{-1}
+                  \mat{X}' \vec{y}
+  \end{align*}
+  Remember:
+  \begin{itemize}
+  \item $y$ centered
+  \item $\mat{X}$ does not include intercept
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Centered Data}
+  \begin{itemize}
+  \item Ridge Regression not invariant to scaling
+    \begin{itemize}
+    \item standardize data
+    \end{itemize}
+  \item We don't want to penalize constant $\beta_{0}$
+    \begin{itemize}
+    \item Solution should be invariant of $y$ scale
+    \end{itemize}
+  \item Estimate
+    \begin{equation*}
+      \beta_{0} = \frac{1}{N} \sum_{i} y_{i}
+    \end{equation*}
+  \item Estimate $\beta_{j}, j \ge 1$ by ridge regression without
+    intercept
+  \item If weights are equal, $\mat{W} = \mat{I}$
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Properties}
+  \begin{itemize}
+  \item Ridge regression decreases parameter values
+    \begin{itemize}
+    \item Useful is highly correlated features in data
+      \begin{itemize}
+      \item $(\mat{X}' \mat{X} + \lambda \mat{W})$ is not singular
+        even if $(\mat{X}' \mat{X})$ is singular
+      \end{itemize}
+    \item estimates of correlated predictors get more similar
+      \begin{itemize}
+      \item estimates of identical predictors equal
+      \end{itemize}
+    \item Large coefficient values disregarded
+    \item Decreases the random ``bumpiness'' of coefficients
+    \end{itemize}
+  \item Coefficients remain non-zero
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Coefficients vs $\lambda$}
+  \begin{center}
+    \includegraphics[width=0.65\linewidth]{coefficients_ridge.png}
+  \end{center}
+\end{frame}
+
+\subsection{Lasso Regression}
+\frame{\tableofcontents[currentsubsection]}
+
+\begin{frame}
+  \frametitle{Lasso Regression}
+  Similar to Ridge but penalize $L_{1}$ norm of $\vec{\beta}$:
+  \begin{equation*}
+    P(\vec{\beta}) =  \sum_{j=1}^{p} |b_{j} w_{j}|
+    =
+    || \mat{W} \vec{\beta} ||_{l_{1}}
+  \end{equation*}
+  This is equivalent to
+  \begin{equation*}
+    \min_{\vec{\beta}} \, (\vec{y} - \mat{X}\vec{\beta})'(\vec{y} - \mat{X}\vec{\beta})
+  \end{equation*}
+  subject to
+  \begin{equation*}
+    \sum_{j=1}^{p} |b_{j}| \le t
+  \end{equation*}
+  Note:
+  \begin{itemize}
+  \item You may not want to penalize intercept
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Properties}
+  \begin{itemize}
+  \item Non-linear model
+    \begin{itemize}
+    \item No closed form solution
+    \item Use coordinate descent
+    \end{itemize}
+  \item Pulls coefficients to (exactly!) zero (sparse solution)
+    \begin{itemize}
+    \item Picks one of the correlated features
+    \item In this way similar to best subset selection
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Coefficients vs $\lambda$}
+  \begin{center}
+    \includegraphics[width=0.65\linewidth]{coefficients_lasso.png}
+  \end{center}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Subset vs Ridge vs Lasso}
+  \begin{center}
+    \includegraphics[width=\linewidth]{subset-ridge-lasso.png}
+  \end{center}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Lasso vs Ridge}
+  \begin{center}
+    \includegraphics[width=\linewidth]{lasso-ridge.png}
+  \end{center}
+\end{frame}
+
+\begin{frame}
+  \frametitle{$\vec{\beta}$-Module Penalties}
+  \begin{center}
+    \includegraphics[width=\linewidth]{beta_penalties.png}
+  \end{center}
+\end{frame}
+
+\subsection{Other Pursuits}
+\frame{\tableofcontents[currentsubsection]}
+
+\begin{frame}
+  \frametitle{Other Methods}
+  \begin{itemize}
+  \item You can penalize different objective functions
+    \begin{equation*}
+      \max_{\vec{\beta}} \likelihood(\vec{\beta}) + \lambda P(\vec{\beta})
+    \end{equation*}
+  \item You can mix ridge and lasso (elastic net):
+    \begin{equation*}
+      \min_{\vec{\beta}} \, (\vec{y} - \mat{X}\vec{\beta})'(\vec{y} - \mat{X}\vec{\beta})
+      + 
+      \lambda_{2} || \mat{W}^{1/2} \vec{\beta}' ||_{l_{2}}^{2}
+      +
+      \lambda_{1} || \mat{W} \vec{\beta}' ||_{l_{1}}
+    \end{equation*}
+  \end{itemize}
+\end{frame}
+
+\section{Key Concepts}
+\frame{\tableofcontents[currentsubsection]}
+
+\begin{frame}
+  \frametitle{Key Concepts}
+  \begin{itemize}
+  \item Best Subset Selection
+  \item Penalty
+  \item Penalized least squares
+  \item Penalized maximum likelihood
+  \item Ridge regression
+  \item Lasso regression
+  \end{itemize}
+\end{frame}
+
+\end{document}

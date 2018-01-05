@@ -1,0 +1,446 @@
+\documentclass[mathserif, xcolor=table, svgnames]{beamer}
+\mode<presentation>
+{
+  \usetheme{Hannover}
+  \setbeamercovered{transparent}
+}
+\usepackage[english]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsthm}
+\usepackage{array,xspace}
+\usepackage{booktabs}
+\usepackage{dcolumn}
+\usepackage{eulervm}
+\usepackage{eurosym}
+\usepackage[mathcal]{euscript}
+\usepackage{graphicx}
+\input{isomath.tex}
+\usepackage{booktabs, multicol, multirow}
+\usepackage{listings}
+\usepackage{mathtools}
+\usepackage{pdfpages}
+\usepackage{relsize}
+\usepackage{wasysym}
+
+\colorlet{OurColor}{LawnGreen!40}
+\colorlet{ShadedRowColor}{LightSkyBlue!40}
+
+\newcommand{\eur}{\EUR{}}
+\newcommand{\individuals}{\mathbbm{I}}
+\newtheorem{proposition}{Proposition}
+\newcommand{\std}[1]{\small\color{lightgray}{#1}}
+\long\def\GobbleColumnStart#1\GobbleColumnStop{}
+\let\GobbleColumnStop\relax
+\newcolumntype{i}{>{\GobbleColumnStart}c<{\GobbleColumnStop}}
+\newcommand{\V}{\ensuremath{\surd}}
+\newcommand{\YSM}{\ensuremath{\text{YSM}}\xspace}
+\graphicspath{{./}{cartoons/}{images/}}
+
+\title[Naive Bayes]{Naive Bayes\\
+\normalsize aka Idiot's Bayes}
+\author{Ott Toomet}
+
+\begin{document}
+\lstset{language=Python}
+
+\begin{frame}
+  \maketitle
+\end{frame}
+
+\begin{frame}
+  \tableofcontents
+\end{frame}
+
+\begin{frame}
+\frametitle{Where We Stand}
+\begin{columns}
+  \begin{column}{0.5\linewidth}
+    \begin{itemize}
+    \item Introduction
+    \item Methods
+      \begin{itemize}
+      \item python, pandas
+      \item Linear algebra
+      \item Probability and statistics
+      \end{itemize}
+    \item Guest speaker
+    \item Linear regression
+      \begin{itemize}
+      \item Causality
+      \end{itemize}
+    \item ML
+      \begin{itemize}
+      \item ML Experiment design
+      \item Nearest neighbors
+      \end{itemize}
+    \end{itemize}
+  \end{column}
+  \begin{column}{0.5\linewidth}
+    \begin{itemize}
+    \item Methods
+      \begin{itemize}
+      \item Gradient Descent 
+      \item Maximum Likelihood, logit
+      \item regularization
+      \end{itemize}
+    \item ML
+      \begin{itemize}
+      \item \alert{Naive bayes}
+      \item PCA/dimensionality reduction
+      \item Clusters \& recommenders
+      \item Trees and forests
+      \item Neural networks
+      \end{itemize}
+    \item Wrap-up
+    \end{itemize}
+  \end{column}
+\end{columns}
+\end{frame}
+
+\section{Review}
+
+\begin{frame}
+  \frametitle{Regularization: Review}
+  \begin{itemize}
+  \item Best Subset Selection
+  \item Penalty
+  \item Penalized least squares
+  \item Penalized maximum likelihood
+  \item Ridge regression
+  \item Lasso regression
+  \end{itemize}
+\end{frame}
+
+\section{Bayes Optimal Classifier}
+\frame{\tableofcontents[currentsection]}
+
+\begin{frame}
+  \frametitle{Bayes Optimal Classifier}
+  \begin{itemize}
+  \item Features, target: $(X, y) \in \mathcal{X} \times \mathcal{Y}$
+    \begin{itemize}
+    \item Target is discrete (classification problem)
+    \end{itemize}
+  \item Bayes Optimal Classifier:
+    \begin{equation*}
+      \hat y^{BO}(X) = \arg\max_{y} \Pr(X, y)
+    \end{equation*}
+    \begin{itemize}
+    \item Most likely $y$ given $X$
+    \end{itemize}
+    \pause
+  \item Problem:
+    \begin{itemize}
+    \item We do not observe $\Pr(X, y)$ outside of training data
+    \item But we can construct it \smiley
+    \end{itemize}
+  \item Bayes Error Rate: error rate of BOC
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Bayes Optimal Classifier is the Best}
+  \begin{theorem}
+    The Bayes Optimal Classifier achieves minimal possible 0/1 error
+    \begin{proof}
+      Daume, section 7.1
+    \end{proof}
+  \end{theorem}
+\end{frame}
+
+\begin{frame}
+  \frametitle{BOC Example}
+  \begin{center}
+    \begin{tabular}[c]{|c|c|}
+      \toprule
+      $Y$ & $X$\\
+      \midrule
+      1 & 1\\
+      0 & 2\\
+      1 & 3\\
+      0 & 1\\
+      0 & 2\\
+      1 & 3\\
+      \bottomrule
+    \end{tabular}
+    \qquad$\Rightarrow$\qquad
+    \begin{tabular}[c]{|c|c|}
+      \toprule
+      $\Pr(Y = 1|X)$ & $X$\\
+      \midrule
+      0.5 & 1\\
+      0 & 2\\
+      1 & 3\\
+      \bottomrule
+    \end{tabular}
+  \end{center}
+\end{frame}
+
+\section[IBL]{Naive Bayes}
+\frame{\tableofcontents[currentsection]}
+
+{
+\setbeamercolor{background canvas}{bg=}
+\includepdf[pages=9-10]{11_josh_naive_bayes.pdf}
+}
+
+\begin{frame}
+  \frametitle{Bayes' Theorem}
+  \begin{equation*}
+    \Pr(A|B) = 
+    \frac{\Pr(B|A) \cdot \Pr(A)}{\Pr(B)}
+  \end{equation*}
+  \begin{itemize}
+  \item $\Pr(A|B)$ posterior probability of $A$ given $B$
+    \begin{itemize}
+    \item The answer to our question
+    \end{itemize}
+  \item $\Pr(B|A)$ probability of $B$ given $A$
+    \begin{itemize}
+    \item Our data
+    \end{itemize}
+  \item $\Pr(B)$ probability of $B$, $A$ or no $A$
+    \begin{itemize}
+    \item Also our data
+    \item Normalizer, can be ignored
+    \end{itemize}
+  \item $\Pr(A)$ prior probability
+    \begin{itemize}
+    \item Best evidence, guess
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+{
+\setbeamercolor{background canvas}{bg=}
+\includepdf[pages=14-15]{11_josh_naive_bayes.pdf}
+}
+
+{
+\setbeamercolor{background canvas}{bg=}
+\includepdf[pages=16-22]{11_josh_naive_bayes.pdf}
+}
+
+\begin{frame}
+  \frametitle{Love with Data}
+  Assume:
+  \begin{itemize}
+  \item $\Pr(\text{date}|L) = 2/3$
+  \item $\Pr(\text{date}|F) = 1/4$
+  \item $\Pr(L) = 1/5$
+    \begin{itemize}
+    \item $\Pr(F) = 4/5$
+    \item Prior!
+    \end{itemize}
+  \end{itemize}
+  Now
+  \begin{align*}
+    \Pr(L|\text{date}) 
+    &= 
+    \frac{\Pr(\text{date}|L) \cdot \Pr(L)}
+    {\Pr(\text{date}|L) \cdot \Pr(L) + \Pr(\text{date}|F) \cdot
+      \Pr(F)}
+    \\
+    &=
+      \frac{\frac{2}{3} \cdot \Pr(L)}
+    {\frac{2}{3} \cdot \Pr(L) + \frac{1}{4} \cdot \Pr(F)}
+    \\
+    &= \frac{2}{5}
+  \end{align*}
+\end{frame}
+
+\subsection{Exercise}
+\frame{\tableofcontents[currentsubsection]}
+
+\begin{frame}
+  \frametitle{Exercise:}
+  Is the e-mail spam?
+  \begin{itemize}
+  \item Find $\Pr(\text{email containing "viagra" is spam})$
+  \item $\Pr(\text{spam}) = 0.4$
+  \item $\Pr(\text{viagra}) = 0.04$
+  \item $\Pr(\text{viagra}|\text{spam}) = 0.06$
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Solution}
+  \begin{multline*}
+    \Pr(\text{spam}|\text{viagra}) 
+    =
+    \frac{\Pr(\text{viagra}, \text{spam})}{\Pr(\text{viagra})}
+    = \\ =
+    \frac{\Pr(\text{viagra}| \text{spam}) \cdot
+      \Pr(\text{spam})}{\Pr(\text{viagra})}
+    = \\ =
+    \frac{0.06 \cdot 0.4 }{ 0.04 }
+    = 0.6
+  \end{multline*}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Prior Probability Matters}
+  \begin{itemize}
+  \item In spam example, easy to find $\Pr(\text{spam})$.
+  \item In ``love-or-friend'' example you cannot
+  \item Calculate $\Pr(\text{love}|\text{meets for date})$ given the
+    prior $\Pr(\text{love})$ is 0.5
+  \item What is a good prior?
+    \begin{itemize}
+    \item This is a criticism of Bayesian Statistics
+    \item It is hard to make decision without data
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Sequential Updating (More Data Helps)}
+  After 1 date:
+  \begin{equation*}
+    \Pr(\text{love}) = 0.4
+  \end{equation*}
+  Invite for another date:
+  \begin{itemize}
+  \item The new prior $\Pr(\text{love}) = 0.4$
+  \item The new $\Pr(\text{date}) = \frac{2}{3} \cdot 0.4 + \frac{1}{4
+    }\cdot 0.6 = \frac{5}{12}$
+    \begin{equation*}
+      \Pr(\text{love}) = 
+      \frac{\Pr(\text{date}|\text{love}) \cdot \Pr(\text{love})}
+      {\Pr(\text{date})} 
+      = 
+      \frac{ \frac{2}{3} \cdot 0.4}
+      {\frac{5}{12}} 
+      = 0.64
+    \end{equation*}
+  \end{itemize}
+\end{frame}
+
+\subsection{Spam Classification}
+\frame{\tableofcontents[currentsubsection]}
+
+\begin{frame}
+  \frametitle{Spam Classification}
+  \begin{columns}
+    \begin{column}{0.5\linewidth}
+      \begin{block}{Singh, Derick <D.Singh@massey...>}
+        MAY WE TALK ?
+      \end{block}
+      \begin{block}{Mr. Tyiacki Alidmard }
+        Urgent!
+
+        I am MR.Tyiacki Alidmard, the director in charge of auditing and
+        accounting section of Eco-bank, Ouagadougou Burkina Faso West
+        Africa. With due respect and regard, I have decided to contact
+        you on a business transaction that will be very beneficial to
+        both of us at the end of the transaction\dots
+      \end{block}
+    \end{column}
+    \begin{column}{0.5\linewidth}
+      \begin{block}{info@zootivor.com}
+        One Time Offer !
+
+        Today we are presenting the UOP Binary Indicator an amazing
+        system to transform your binary trading .  Here are happy
+        customer testimonials
+      \end{block}
+      \begin{block}{Hannah Allan}
+        Hello my dear,
+
+        I sent this mail praying it will found you in a good condition of
+        health, since I myself are in a very critical health condition\dots
+      \end{block}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Data}
+  \begin{itemize}
+  \item Input (observations)
+    \begin{itemize}
+    \item email
+    \item In form of \emph{bag of words}
+      \begin{itemize}
+      \item Frequency table of words in emails
+      \end{itemize}
+    \item URL-s, sender addresses, \dots
+    \end{itemize}
+  \item Target:
+    \begin{itemize}
+    \item Spam/no spam
+    \end{itemize}
+  \item Predict:
+    \begin{equation*}
+      \Pr(\text{spam}|\text{features})
+    \end{equation*}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Predictor $\hat y$}
+  Predictor $\hat y$ based on features $x_{ij}$
+  \begin{itemize}
+  \item $x_{ij}$: feature $j$ of observation $i$
+  \item For instance counts of word ``viagra'' in email $i$
+  \end{itemize}
+  \begin{multline*}
+    \hat y_{i} =
+    \argmax_{c}
+    \Pr(c|x_{i1}, x_{i2}, \dots, x_{ik}) =
+    \\
+    = \argmax_{c} 
+    \frac{\Pr(x_{i1}, x_{i2}, \dots, x_{ik}|c) \cdot \Pr(c)}
+    {\Pr(x_{i1}, x_{i2}, \dots, x_{ik})} =
+    \\
+    = \argmax_{c}
+    \Pr(x_{i1}, x_{i2}, \dots, x_{ik}|c) \cdot \Pr(c)
+  \end{multline*}
+  (Why can you do this?)
+\end{frame}
+
+\begin{frame}
+  \frametitle{\emph{Naive} Assumption}
+  Assume features are independent
+  \begin{equation*}
+    \Pr(x_{i1}, x_{i2}, \dots, x_{ik}|c) =
+    \prod_{j} \Pr(x_{ij}|c)
+  \end{equation*}
+  Now the classifier
+  \begin{multline*}
+      \hat y_{i} =
+      \argmax_{c} \prod_{j} \Pr(x_{ij}|c) \cdot \Pr(c) =
+      \\
+      = \argmax_{c} \left[
+      \log  \Pr(c) + \sum_{j} \log \Pr(x_{ij}|c)
+    \right]
+  \end{multline*}
+  (why can you do this?)
+\end{frame}
+
+\subsection{Spam Example}
+\frame{\tableofcontents[currentsubsection]}
+
+{
+\setbeamercolor{background canvas}{bg=}
+\includepdf[pages=35-]{11_josh_naive_bayes.pdf}
+}
+
+\section{Key Concepts}
+\frame{\tableofcontents[currentsection]}
+
+\begin{frame}
+  \frametitle{Key Concepts}
+  \begin{itemize}
+  \item Conditional probability
+  \item Bayes' theorem
+  \item Prior probability (prior)
+  \item Posterior probability
+  \item Naive Bayes assumption
+  \item Naive Bayes algorithm
+  \item Smoothing
+  \end{itemize}
+\end{frame}
+ 
+\end{document}

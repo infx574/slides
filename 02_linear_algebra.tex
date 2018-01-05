@@ -1,0 +1,674 @@
+\documentclass[mathserif, xcolor=table, svgnames]{beamer}
+\mode<presentation>
+{
+  \usetheme{Hannover}
+  \setbeamercovered{transparent}
+}
+\usepackage[english]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsthm}
+\usepackage{array,xspace}
+\usepackage{dcolumn}
+\usepackage{eulervm}
+\usepackage{eurosym}
+\usepackage{graphicx}
+\input{isomath.tex}
+\usepackage{booktabs, multicol, multirow}
+\usepackage{listings}
+\usepackage{relsize}
+\usepackage{wasysym}
+
+\newcommand{\eur}{\EUR{}}
+\newcommand{\individuals}{\mathbbm{I}}
+\newtheorem{proposition}{Proposition}
+\newcommand{\std}[1]{\small\color{lightgray}{#1}}
+\long\def\GobbleColumnStart#1\GobbleColumnStop{}
+\let\GobbleColumnStop\relax
+\newcolumntype{i}{>{\GobbleColumnStart}c<{\GobbleColumnStop}}
+\newcommand{\V}{\ensuremath{\surd}}
+\newcommand{\YSM}{\ensuremath{\text{YSM}}\xspace}
+\graphicspath{{./}{cartoons/}{images/}}
+
+\title{Linear Algebra\\
+A quick wrap-up}
+\author{Ott Toomet}
+
+\begin{document}
+\lstset{language=Python,
+  keywordstyle=\color{DeepSkyBlue},
+  stringstyle=\color{SeaGreen},
+  commentstyle=\color{Crimson},
+  backgroundcolor=\color{LightSkyBlue!30},
+  emph = {dot, matrix, inv}, emphstyle=\bf
+}
+
+\begin{frame}
+  \maketitle
+\end{frame}
+
+\begin{frame}
+  \tableofcontents
+\end{frame}
+
+\begin{frame}
+\frametitle{Where We Stand}
+\begin{columns}
+  \begin{column}{0.5\linewidth}
+    \begin{itemize}
+    \item Introduction
+    \item Methods
+      \begin{itemize}
+      \item python, pandas
+      \item \alert{Linear algebra}
+      \item Probability and statistics
+      \end{itemize}
+    \item Guest speaker
+    \item Linear regression
+      \begin{itemize}
+      \item Causality
+      \end{itemize}
+    \item ML
+      \begin{itemize}
+      \item Experiment design
+      \item Nearest neighbors
+      \end{itemize}
+    \end{itemize}
+  \end{column}
+  \begin{column}{0.5\linewidth}
+    \begin{itemize}
+    \item Methods
+      \begin{itemize}
+      \item Gradient Descent 
+      \item Maximum Likelihood, logit
+      \item regularization
+      \end{itemize}
+    \item ML
+      \begin{itemize}
+      \item Naive bayes
+      \item PCA/dimensionality reduction
+      \item Clusters \& recommenders
+      \item Trees and forests
+      \item Neural networks
+      \end{itemize}
+    \item Wrap-up
+    \end{itemize}
+  \end{column}
+\end{columns}
+\end{frame}
+
+\section[Why?]{Why Linear Algebra}
+
+\begin{frame}
+  \frametitle{What Is Linear Algebra}
+  \begin{itemize}
+  \item Math with vectors and matrices
+    \begin{itemize}
+    \item includes ``addition'' and ``multiplication'' $\Rightarrow$
+      it is an ``algebra''
+    \item Multiplication and addition are \emph{linear}:
+      \begin{align*}
+        \mat{A} \times ( \mat{B} + \mat{C} ) 
+        &=
+          \mat{A} \times \mat{B} + \mat{A} \times \mat{C}
+          \qquad\text{(distributive)}
+        \\
+        \mat{A} \times (\lambda \cdot \mat{C} ) 
+        &=
+          \lambda \cdot (\mat{A} \times \mat{C})
+      \end{align*}
+      \begin{description}
+      \item[$\times$] matrix multiplication
+      \item[$\cdot$] \emph{scalar multiplication}
+      \end{description}
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+\frametitle{Why Is It Useful}
+\begin{description}
+\item Express complex relationships in a compact way
+  \begin{itemize}
+  \item Example: equation system with 3 variables
+  \item Non-matrix notation
+    \begin{equation*}
+      \begin{split}
+        x_{1} + 2x_{2} &= 7 \\
+        -x_{2} + x_{3} &= 6 \\
+        x_{1} - 4x_{2} + x_{3} &= -2
+      \end{split}
+    \end{equation*}
+  \item Matrix notation
+    \begin{equation*}
+      \begin{pmatrix}
+        1 & 2 & 0\\
+        0 & -1 & 1\\
+        1 & -4 & 1\\
+      \end{pmatrix}
+      \begin{pmatrix}
+        x_{1}\\
+        x_{2}\\
+        x_{3}\\
+      \end{pmatrix}
+      =
+      \begin{pmatrix}
+        7\\
+        6\\
+        -2\\
+      \end{pmatrix}
+    \end{equation*}
+  \end{itemize}
+\end{description}
+\end{frame}
+
+\begin{frame}
+\frametitle{It Is Easier to Solve}
+\begin{itemize}
+\item Non-Matrix: long and tedious and error-prone
+  \url{http://www.sosmath.com/soe/SE311105/SE311105.html}
+\item Matrix:
+  \begin{equation*}
+    \begin{pmatrix}
+      x_{1}\\
+      x_{2}\\
+      x_{3}\\
+    \end{pmatrix}
+    =
+    \begin{pmatrix}
+      1 & 2 & 0\\
+      0 & -1 & 1\\
+      1 & -4 & 1\\
+    \end{pmatrix}
+    ^{-1}
+    \begin{pmatrix}
+      7\\
+      6\\
+      -2\\
+    \end{pmatrix}
+  \end{equation*}
+\end{itemize}
+\end{frame}
+
+
+\begin{frame}[fragile]
+\frametitle{... And Computers Can Do It Too!}
+\begin{lstlisting}[frame=trBL]
+## create matrices
+A = np.matrix([[1, 2, 0], 
+               [0, -1, 1], 
+               [1, -4, 1]])
+B = np.matrix([[7], [6], [-1]])
+## compute
+A1 = np.linalg.inv(A)
+x = A1.dot(B)
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Another Example: Linear Regression}
+  Non-matrix problem (2 variables):
+  \begin{equation*}
+    Y_{i} = \beta_{1} + \beta_{2} T_{i} + \beta_{3} G_{i} +
+    \epsilon_{i}
+    \qquad
+    \text{for}\quad
+    i = 1\dots n
+  \end{equation*}
+\end{frame}
+
+\begin{frame}
+  \begin{center}
+    \includegraphics[scale=0.3]{multiple_regression_non-matrix.png}
+  \end{center}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Matrix Approach}
+    \begin{equation*}
+      \begin{pmatrix}
+        Y_{1}\\
+        Y_{2}\\
+        \vdots\\
+        Y_{n}\\
+      \end{pmatrix}
+      =
+      \begin{pmatrix}
+        1 & T_{1} & G_{1}\\
+        1 & 1_{2} & G_{2}\\
+        \vdots & \vdots & \vdots\\
+        1 & T_{n} & G_{n}\\
+      \end{pmatrix}
+      \begin{pmatrix}
+        \beta_{1}\\
+        \beta_{2}\\
+        \beta_{3}\\
+      \end{pmatrix}
+      +
+      \begin{pmatrix}
+        \epsilon_{1}\\
+        \epsilon_{2}\\
+        \vdots\\
+        \epsilon_{n}\\
+      \end{pmatrix}
+    \end{equation*}
+    Solution:
+    \begin{equation*}
+      \begin{pmatrix}
+        \beta_{1}\\
+        \beta_{2}\\
+        \beta_{3}\\
+      \end{pmatrix}
+      =
+      \left(
+        \mat{X} \mat{X}'
+      \right)^{-1}
+      \mat{X}'
+    \begin{pmatrix}
+      Y_{1}\\
+      Y_{2}\\
+      \vdots\\
+      Y_{n}\\
+    \end{pmatrix}
+    \qquad
+    \text{where}
+    \qquad
+      \mat{X} = 
+      \begin{pmatrix}
+        1 & T_{1} & G_{1}\\
+        1 & 1_{2} & G_{2}\\
+        \vdots & \vdots & \vdots\\
+        1 & T_{n} & G_{n}\\
+      \end{pmatrix}
+    \end{equation*}
+\begin{lstlisting}[frame=trBL]
+## warning: not tested
+np.linalg.inv(X.dot(X.T)).dot(X.T).dot(y)
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Summary}
+  \begin{itemize}
+  \item Linear algebra is a very important language in statistics
+    \begin{itemize}
+    \item A lot of multivariate stuff easily generalizes into matrix form
+    \item Good software libraries exist
+    \item A lot less error prone
+    \item You should be able to read it \dots
+    \item \dots and code it
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\section{Matrix \& Vector}
+
+\begin{frame}
+  \frametitle{Matrix}
+  \begin{equation*}
+    \mat{A} 
+    = [ a_{ij} ]
+    =
+    \begin{bmatrix}
+      a_{11} & a_{12} & \dots & a_{1M}\\
+      a_{21} & a_{22} & \dots & a_{2M}\\
+      \vdots & \vdots & \ddots & \vdots \\
+      a_{N1} & a_{N2} & \dots & a_{NM}\\
+    \end{bmatrix}
+  \end{equation*}
+  \begin{description}
+  \item[Symmetric matrix] $a_{ij} = a_{ji}$
+  \item[Diagonal Matrix] $a_{ij} = 0$ iff $i \not = j$
+  \item[Identity matrix] $a_{ij} = \indic(i = j)$
+  \item[Transposition] 
+    \begin{equation*}
+      A' = [a_{ji}] =
+      \begin{bmatrix}
+        a_{11} & a_{21} & \dots & a_{N1}\\
+        a_{12} & a_{22} & \dots & a_{N2}\\
+        \vdots & \vdots & \ddots & \vdots \\
+        a_{1M} & a_{2M} & \dots & a_{NM}\\
+      \end{bmatrix}
+    \end{equation*}
+  \end{description}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Matrix Multiplication}
+  \begin{equation*}
+    \mat{A} \mat{B} = [ c_{ik} ]
+  \end{equation*}
+  where
+  \begin{equation*}
+    c_{ik} = \sum_{j = 1}^{M} a_{ij} b_{jk}
+  \end{equation*}
+  \begin{itemize}
+  \item Number of rows of $\mat{A}$ must match the number of columns
+    of $\mat{B}$
+  \end{itemize}
+  \includegraphics[width=\linewidth]{wanna-multiply-with-me.png}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Matrix Multiplication}
+  \begin{itemize}
+  \item Properties:
+    \begin{itemize}
+    \item Associative: $(\mat{A}\mat{B})\mat{C} = \mat{A}(\mat{B}\mat{C})$
+    \item Distributive: $\mat{A}(\mat{B}+\mat{C}) = \mat{A}\mat{B} + \mat{A}\mat{C}$
+    \item Not commutative: $(\mat{A}\mat{B})' = \mat{B}' \mat{A}'$ but
+      $\mat{A}\mat{B} \not= \mat{B}\mat{A}$
+    \end{itemize}
+  \item \emph{Left-multiplication} and \emph{right-multiplication}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Vector}
+  $1\times n$ or $n \times 1$ matrix:
+  \begin{itemize}
+  \item Column vector
+    \begin{equation*}
+      \vec{a} = 
+      \begin{bmatrix}
+        a_{1} \\ a_{2} \\ \vdots \\ a_{n}
+      \end{bmatrix}
+    \end{equation*}
+  \item Row vector
+    \begin{equation*}
+      \vec{a}' = 
+      \begin{bmatrix}
+        a_{1} & a_{2} & \hdots & a_{n}
+      \end{bmatrix}
+    \end{equation*}
+  \item Vector multiplication is regular matrix multiplication
+    \begin{equation*}
+      a a' = [ a_{i} a_{j} ]
+      \qquad
+      \text{is $n\times n$ matrix}
+    \end{equation*}
+    \begin{equation*}
+      a' a = 
+      \begin{bmatrix}
+        \sum_{i=1}^{n} a_{i}^{2}
+      \end{bmatrix}
+      \qquad
+      \text{is $1\times 1$ matrix (scalar)}
+    \end{equation*}
+  \end{itemize}
+\end{frame}
+
+\section[Rank]{Matrix Rank}
+
+\begin{frame}
+  \frametitle{Linear Independence}
+  Vectors $\vec{a}_{1}$, $\vec{a}_{2}$, \dots, $\vec{a}_{n}$ are
+  \emph{linearly independent} iff
+  \begin{gather*}
+    \alpha_{1} \vec{a}_{1} + \alpha_{2} \vec{a}_{2} 
+    + \dots + \alpha_{n} \vec{a}_{n} = 0
+    \\
+    \Updownarrow
+    \\
+    \alpha_{1} = \alpha_{2} = \dots = \alpha_{n} = 0
+  \end{gather*}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Column Space, Rank}
+  \begin{description}
+  \item[Column space] is the vector space, generated by the column
+    vectors of the matrix
+  \item[Column rank] dimension of the column space
+  \item[Full column rank] column rank equals to the number of columns
+  \item[Full rank] rank equals to the smallest of either number of
+    rows or number of columns
+  \end{description}
+  \begin{theorem}
+    Row and column rank are equal
+  \end{theorem}
+  (and are called \emph{matrix rank})
+\end{frame}
+
+\section{Determinant}
+
+\begin{frame}
+  \frametitle{Determinant}
+  is a scalar function of matrix elements
+  \begin{itemize}
+  \item Useful descriptor of matrix properties in many contexts
+  \end{itemize}
+  \begin{itemize}
+  \item For $2\times2$ matrix
+    \begin{math}
+      \mat{A} = 
+      \begin{bmatrix}
+        a_{11} & a_{12}\\
+        a_{21} & a_{22}\\
+      \end{bmatrix}
+    \end{math}
+    \begin{equation*}
+      \det \mat{A} \equiv |\mat{A}|
+      = a_{11} a_{22} - a_{12} a_{21}
+    \end{equation*}
+  \item for $3\times3$ matrix
+    \begin{math}
+      \mat{B} = 
+      \begin{bmatrix}
+        b_{11} & b_{12} & b_{13}\\
+        b_{21} & b_{22} & b_{23}\\
+        b_{31} & b_{32} & b_{33}\\
+      \end{bmatrix}
+    \end{math}
+    \begin{multline*}
+      |\mat{B}|
+      = b_{11} b_{22} b_{33} + b_{12}b_{23}b_{31} + b_{21}b_{32}b_{13}
+      -
+      \\
+      - b_{31}b_{22}b_{13} - b_{21}b_{12}b_{33} - b_{11}b_{23}b_{32}
+    \end{multline*}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Determinant 2}
+  \begin{itemize}
+  \item Determinant of diagonal matrix
+    \begin{math}
+      \mat{C} = 
+      \begin{bmatrix}
+        c_{11} & 0     & \hdots & 0\\
+        0     & c_{22} & \hdots & 0\\
+        \hdots&\hdots & \ddots & \vdots\\
+        0     & 0     & \hdots & c_{nn}\\
+      \end{bmatrix}
+    \end{math}
+    \begin{equation*}
+      |\mat{C}|
+      = \prod_{i=1}^{n} c_{ii}
+    \end{equation*}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Determinant Property}
+  \begin{theorem}
+    determinant is non-zero $\Leftrightarrow$ matrix is full rank
+  \end{theorem}
+\end{frame}
+
+\section{Inverse Matrix}
+
+\begin{frame}
+  \frametitle{Inverse Matrix}
+  \begin{itemize}
+  \item $\mat{A}$: square matrix
+  \end{itemize}
+  $\mat{B}$ is \emph{inverse} $\mat{A}$ iff
+  \begin{equation*}
+    \mat{B} \mat{A} = \mat{I},
+  \end{equation*}
+  and is denoted by $\mat{A}^{-1}$.
+  \begin{itemize}
+  \item $\mat{A}^{-1}$ is also a square matrix
+  \item $\mat{A}^{-1}$ is unique
+  \end{itemize}
+  For $2\times2$ matrix 
+  \begin{math}
+    \mat{A} = 
+    \begin{bmatrix}
+      a_{11} & a_{12}\\
+      a_{21} & a_{22}\\
+    \end{bmatrix}
+  \end{math},
+  \begin{equation*}
+    \mat{A}^{-1} =
+    \frac{1}{|\mat{A}|}
+    \begin{bmatrix}
+      a_{22} & -a_{12} \\
+      -a_{21} & a11\\
+    \end{bmatrix}
+  \end{equation*}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Inverse Matrix 2}
+  \begin{itemize}
+  \item Inverse of diagonal matrix
+    \begin{math}
+      \mat{C} = 
+      \begin{bmatrix}
+        c_{11} & 0     & \hdots & 0\\
+        0     & c_{22} & \hdots & 0\\
+        \hdots&\hdots & \ddots & \vdots\\
+        0     & 0     & \hdots & c_{nn}\\
+      \end{bmatrix}
+    \end{math}
+    \begin{equation*}
+      \mat{C}^{-1}
+      \begin{bmatrix}
+        1/c_{11} & 0     & \hdots & 0\\
+        0     & 1/c_{22} & \hdots & 0\\
+        \hdots&\hdots & \ddots & \vdots\\
+        0     & 0     & \hdots & 1/c_{nn}\\
+      \end{bmatrix}
+    \end{equation*}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Inverse Properties}
+  \begin{definition}
+    Matrix is \emph{non-singular} $\Leftrightarrow$ inverse exists
+  \end{definition}
+  \begin{theorem}
+    Matrix is \emph{non-singular} $\Leftrightarrow$ it is full rank
+  \end{theorem}
+\end{frame}
+
+\section[Eigenvalues]{Characteristic Roots}
+
+\begin{frame}
+  \frametitle{Characteristic Equation}
+  \emph{Characteristic roots} (eigenvalues) are solutions ($\lambda$) of the
+  equation
+  \begin{equation*}
+    \mat{A} \vec{c} = \lambda \vec{c}
+  \end{equation*}
+  \emph{Characteristic vectors} (eigenvectors) are corresponding $\vec{c}$-s.
+
+  Rewrite:
+  \begin{equation*}
+    (\mat{A} - \lambda \mat{I})\vec{c} = \vec{0}
+  \end{equation*}
+  $\Rightarrow$ $\mat{A} - \lambda \mat{I}$ must be singular
+  $\Rightarrow$
+  $|\mat{A} - \lambda \mat{I}| = 0$.
+\end{frame}
+
+\begin{frame}
+  \frametitle{Symmetric Matrix}
+  $n\times n$ symmetric matrix has
+  \begin{itemize}
+  \item $n$ distinct characteristic vectors $\vec{c}_{i}$
+  \item $n$ real characteristic roots (not necessarily distinct)
+  \item Characteristic vectors are orthogonal:
+    \begin{equation*}
+      \vec{c}_{i}' \vec{c}_{j} = \indic(i=j)
+    \end{equation*}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Diagonalization}
+  Characteristic equation in matrix form
+  \begin{equation*}
+    \mat{A} \mat{C} = \mat{C} \Lambda,
+  \end{equation*}
+  where
+  \begin{multline*}
+    C = 
+    \begin{bmatrix}
+      \vec{c}_{1} & \vec{c}_{2} & \hdots & \vec{c}_{n}
+    \end{bmatrix}
+      \qquad\text{and}\\
+      \Lambda =
+      \begin{bmatrix}
+        \lambda_{0} & 0 & 0 & \hdots & 0\\
+        0 & \lambda_{1} & 0 & \hdots & 0\\
+        \vdots & \vdots & \ddots & \vdots & 0\\
+        0 & 0 & 0 & \hdots & \lambda_{n}\\
+      \end{bmatrix}
+  \end{multline*}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Characteristic Roots of Symmetric Matrix}
+  As characteristic vectors $\vec{c}$ orthogonal,
+  \begin{equation*}
+    \mat{C}' \mat{C} = \mat{I}
+  \end{equation*}
+  \begin{itemize}
+  \item $\mat{C}$ is \emph{idempotent} matrix
+  \item $\mat{C}^{-1} = \mat{C}'$
+  \end{itemize}
+  Diagonalization:
+  \begin{equation*}
+    \mat{A} = \mat{C} \Lambda  \mat{C}'
+  \end{equation*}
+  or
+  \begin{equation*}
+    \Lambda = \mat{C}' \mat{A} \mat{C}
+  \end{equation*}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Rank}
+  \begin{theorem}
+    Rank of a symmetric matrix equals the number of non-zero
+    characteristic roots
+    \begin{equation*}
+      \rank \mat{A} = \rank \Lambda
+    \end{equation*}
+  \end{theorem}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Condition Number}
+  Show how close a matrix is to being singular:
+  \begin{equation*}
+    \kappa(\mat{A})
+    =
+    \frac{|\lambda_{\max} \mat{A}|}{|\lambda_{\min} \mat{A}|}
+  \end{equation*}
+  \begin{itemize}
+  \item $\lambda_{\max}$ maximum eigenvalue (by absolute value)
+  \item $\lambda_{\min}$ minimum
+  \item Shows the sensitivity (to numeric noise/errors
+  \item Sometimes defined as $\sqrt{\cdot}$ of the ratio above
+  \end{itemize}
+\end{frame}
+
+\end{document}

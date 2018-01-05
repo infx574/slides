@@ -1,0 +1,230 @@
+\documentclass[mathserif, xcolor=table, svgnames]{beamer}
+\mode<presentation>
+{
+  \usetheme{Hannover}
+  \setbeamercovered{transparent}
+}
+\usepackage[english]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsthm}
+\usepackage{array,xspace}
+\usepackage{booktabs}
+\usepackage{dcolumn}
+\usepackage{eulervm}
+\usepackage{eurosym}
+\usepackage{graphicx}
+\input{isomath.tex}
+\usepackage{booktabs, multicol, multirow}
+\usepackage{listings}
+\usepackage{mathtools}
+\usepackage{pdfpages}
+\usepackage{relsize}
+\usepackage{wasysym}
+
+\colorlet{OurColor}{LawnGreen!40}
+\colorlet{ShadedRowColor}{LightSkyBlue!40}
+
+\newcommand{\eur}{\EUR{}}
+\newcommand{\individuals}{\mathbbm{I}}
+\newtheorem{proposition}{Proposition}
+\newcommand{\std}[1]{\small\color{lightgray}{#1}}
+\long\def\GobbleColumnStart#1\GobbleColumnStop{}
+\let\GobbleColumnStop\relax
+\newcolumntype{i}{>{\GobbleColumnStart}c<{\GobbleColumnStop}}
+\newcommand{\V}{\ensuremath{\surd}}
+\newcommand{\YSM}{\ensuremath{\text{YSM}}\xspace}
+\graphicspath{{./}{cartoons/}{images/}}
+
+\title{Nearest Neighbors}
+\author{Ott Toomet}
+
+\begin{document}
+\lstset{language=Python}
+
+\begin{frame}
+  \maketitle
+\end{frame}
+
+\begin{frame}
+  \tableofcontents
+\end{frame}
+
+\begin{frame}
+\frametitle{Where We Stand}
+\begin{columns}
+  \begin{column}{0.5\linewidth}
+    \begin{itemize}
+    \item Introduction
+    \item Methods
+      \begin{itemize}
+      \item python, pandas
+      \item Linear algebra
+      \item Probability and statistics
+      \end{itemize}
+    \item Guest speaker
+    \item Linear regression
+      \begin{itemize}
+      \item Causality
+      \end{itemize}
+    \item ML
+      \begin{itemize}
+      \item ML Experiment design
+      \item \alert{Nearest neighbors}
+      \end{itemize}
+    \end{itemize}
+  \end{column}
+  \begin{column}{0.5\linewidth}
+    \begin{itemize}
+    \item Methods
+      \begin{itemize}
+      \item Gradient Descent 
+      \item Maximum Likelihood, logit
+      \item regularization
+      \end{itemize}
+    \item ML
+      \begin{itemize}
+      \item Naive bayes
+      \item PCA/dimensionality reduction
+      \item Clusters \& recommenders
+      \item Trees and forests
+      \item Neural networks
+      \end{itemize}
+    \item Wrap-up
+    \end{itemize}
+  \end{column}
+\end{columns}
+\end{frame}
+
+\section{Last Time}
+
+\begin{frame}
+  \frametitle{ML Experiments}
+  \begin{itemize}
+  \item Supervised/unsupervised learning
+  \item Machine Learning vs Econometrics
+  \item Causal vs non-causal analysis
+  \item Goodness-of-fit
+    \begin{itemize}
+    \item Baseline (benchmark) model
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\section[IBL]{Instance-Based Learning}
+\frame{\tableofcontents[currentsection]}
+
+{
+\setbeamercolor{background canvas}{bg=}
+\includepdf[pages=6-8]{07_josh_nearest_neighbors.pdf}
+}
+
+\begin{frame}
+  \frametitle{Simple Example}
+  \begin{columns}
+    \begin{column}{0.5\linewidth}
+      \begin{center}
+        Data:\\
+        \begin{tabular}{rr}
+          \toprule
+          horsepower & MPG\\
+          \midrule
+          49 & 29.00 \\ 
+          52 & 31.00 \\ 
+          86 & 23.00 \\ 
+          95 & 18.00 \\ 
+          98 & 18.50 \\ 
+          150 & 13.00 \\ 
+          150 & 14.00 \\ 
+          165 & 15.00 \\ 
+          190 & 13.00 \\ 
+          198 & 15.00 \\ 
+          \bottomrule
+        \end{tabular}
+      \end{center}
+    \end{column}
+    \begin{column}{0.5\linewidth}
+      \begin{center}
+        Predict\\
+        \begin{tabular}{rc}
+          \toprule
+          horsepower & MPG\\
+          \midrule
+          50 & ?\\
+          80 & ?\\
+          100 & ?\\
+          130 & ?\\
+          \bottomrule
+        \end{tabular}
+      \end{center}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\section{$k$-Nearest Neigbors (kNN)}
+\frame{\tableofcontents[currentsection]}
+
+{
+\setbeamercolor{background canvas}{bg=}
+\includepdf[pages=10-13]{07_josh_nearest_neighbors.pdf}
+}
+
+\begin{frame}
+  \frametitle{Mahalanobis Distance}
+  \begin{equation*}
+    D^{m} = \sqrt{
+      (\vec{x} - \vec{y})' \Sigma^{-1} (\vec{x} - \vec{y})
+    }
+  \end{equation*}
+  \begin{itemize}
+  \item $\vec{x}$: $N$-dimensional vector
+  \item $\vec{y}$: sample of $N$-dimensional vectors
+  \item $\Sigma = \var{\vec{y}}$
+  \end{itemize}
+  In case of independent features, $\cov(y_{i}, y_{j}) = 
+  \indic(i = j) \cdot s_{i}^{2}$,
+  \begin{equation*}
+    D^{m} = \sqrt{
+      \sum_{i} \frac{(x_{i} - y_{i})^{2}}{s_{i}^{2}}
+    }
+  \end{equation*}
+  is Euclidean distance in normalized values.
+  \begin{itemize}
+  \item A simple shortcut:
+    \begin{enumerate}
+    \item Standardize features
+    \item Calculate Euclidean distance
+    \end{enumerate}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Mahalanobis Distance 2}
+  \begin{columns}
+    \begin{column}{0.5\linewidth}
+      \includegraphics[width=\linewidth]{mahalanobis0.png}
+      \\
+      \includegraphics[width=\linewidth]{mahalanobis1.png}
+    \end{column}
+    \begin{column}{0.5\linewidth}
+      \includegraphics[width=\linewidth]{mahalanobis2.png}
+      \\
+      \includegraphics[width=\linewidth]{mahalanobis3.png}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+{
+\setbeamercolor{background canvas}{bg=}
+\includepdf[pages=14,16,15]{07_josh_nearest_neighbors.pdf}
+}
+
+\section{Curse of Dimensionality}
+\frame{\tableofcontents[currentsection]}
+ 
+{
+\setbeamercolor{background canvas}{bg=}
+\includepdf[pages=18-19]{07_josh_nearest_neighbors.pdf}
+}
+ 
+\end{document}

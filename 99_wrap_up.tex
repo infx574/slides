@@ -1,0 +1,82 @@
+\documentclass[mathserif,aspectratio=169]{beamer}
+\mode<presentation>
+{
+  \usetheme{Hannover}
+  \setbeamercovered{transparent}
+}
+\usepackage[english]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{array,xspace}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\input{isomath.tex}
+\usepackage{eulervm}
+\usepackage{multicol}
+\usepackage{Sweave}
+\usepackage{textcomp}
+\usepackage{verbatim}
+\usepackage{wasysym}
+
+\newcommand{\std}[1]{\footnotesize\color{lightgray}{#1}}
+\long\def\GobbleColumnStart#1\GobbleColumnStop{}
+\let\GobbleColumnStop\relax
+\newcolumntype{i}{>{\GobbleColumnStart}c<{\GobbleColumnStop}}
+\graphicspath{{./}{cartoons/}{images/}}
+
+
+\title{Wrap Up}
+\author{Ott Toomet}
+
+\begin{document}
+
+\begin{frame}
+  \maketitle
+\end{frame}
+
+\begin{frame}
+  \frametitle{Methods}
+  Which method to pick?
+\end{frame}
+
+\begin{frame}
+  \frametitle{How to handle different data?}
+  \begin{itemize}
+  \item Missing observations
+  \item Zeros/sparse data
+  \item Semi-discrete distributions
+  \item Fat-tailed distributions
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Interviews}
+  \begin{itemize}
+  \item What are the interview questions?
+  \item A lot about statistics/ML
+    \begin{itemize}
+    \item linear regression formula
+    \item Maximum Likelihood
+    \item causal analysis/matching
+    \item Why least \emph{squares}, not least \emph{absolute deviations}?
+    \end{itemize}
+  \item Programming
+    \begin{itemize}
+    \item SQL
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Study Further \smiley}
+  \begin{itemize}
+  \item calculus
+  \item linear algebra
+  \item probability/statistics
+  \item ML methods
+  \item programming/libraries
+  \item MC experiments
+  \end{itemize}
+\end{frame}
+
+\end{document}
